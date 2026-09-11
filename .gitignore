@@ -1,0 +1,32 @@
+# =========================
+# BACKEND - Spring Boot / Maven
+# =========================
+**/target/
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+
+# =========================
+# FRONTEND - React / Vite
+# =========================
+**/node_modules/
+**/dist/
+
+# =========================
+# VS Code
+# =========================
+**/.vscode/
+
+# =========================
+# Variables de entorno / secretos
+# =========================
+**/.env
+**/.env.*
+!**/.env.example
+
+# =========================
+# Archivos del sistema
+# =========================
+.DS_Store
+Thumbs.db

@@ -1,0 +1,11 @@
+//PANTALLAS//
+1. Inicio / Torneos activos
+2. Jugadores
+3. Equipos
+4. Crear / Configurar torneo
+5. Generar fixture
+6. Fixture / Jornadas
+7. Registrar partido
+8. Ranking por jornada
+9. Sanciones
+10. Tarjetas

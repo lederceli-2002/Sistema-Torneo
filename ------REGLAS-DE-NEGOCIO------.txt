@@ -1,0 +1,12 @@
+------//REGLAS-DE-NEGOCIO//------
+
+-un equipo no puede estar dos veces en la misma serie;
+-un jugador no puede quedar inscrito dos veces en el mismo torneo;
+-un partido no puede tener al mismo equipo como local y visitante;
+-no se puede registrar participación de un jugador suspendido;
+-al llegar a 3 amarillas se genera suspensión;
+-una roja sugiere 2 jornadas;
+-el fixture se genera completo antes del torneo;
+-una jornada puede tener partidos en fechas distintas;
+-el ranking se calcula con 3/1/0 puntos;
+-El ranking de una jornada se genera automáticamente cuando todos los partidos de esa jornada tienen su resultado registrado/finalizado.

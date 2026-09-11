@@ -1,0 +1,47 @@
+#root {
+    width: 100%;
+    min-height: 100vh;
+}
+
+.pagina {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background-color: #263746;
+    color: white;
+}
+
+.sidebar-logo {
+    margin: 0;
+    padding: 24px 18px;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-menu button {
+    background: none;
+    border: none;
+    color: white;
+    text-align: left;
+    padding: 14px 18px;
+    cursor: pointer;
+}
+
+.sidebar-menu button:hover {
+    background-color: #354b5e;
+}
+
+.contenido {
+    flex: 1;
+    padding: 35px;
+    background-color: white;
+    text-align: left;
+}

@@ -1,0 +1,72 @@
+-------------BOCETO DE DIAGRAMA DER-------------
+
+Torneo 1 ----- N Fase *
+Fase   1 ----- N Serie * 
+
+
+// PARTICIPACIÓN DE EQUIPOS
+
+Torneo 1 ----- N ParticipacionEquipoTorneo *
+Serie  1 ----- N ParticipacionEquipoTorneo *
+Equipo 1 ----- N ParticipacionEquipoTorneo *
+
+
+// PARTICIPACIÓN DE JUGADORES EN EL TORNEO
+
+Torneo  1 ----- N ParticipacionJugadorTorneo *
+Equipo  1 ----- N ParticipacionJugadorTorneo *
+Jugador 1 ----- N ParticipacionJugadorTorneo *
+
+
+// JORNADAS Y PARTIDOS
+
+Serie   1 ----- N Jornada *
+ 
+Partido N ----- 1 Jornada *
+Partido N ----- 1 ParticipacionEquipoTorneo (local) *
+Partido N ----- 1 ParticipacionEquipoTorneo (visitante) * 
+
+
+// PARTICIPACIÓN DEL JUGADOR EN UN PARTIDO
+
+ParticipacionJugadorTorneo 1 ----- N ParticipacionJugadorPartido *
+Partido                    1 ----- N ParticipacionJugadorPartido * 
+
+
+// GOLES
+
+Partido                    1 ----- N Gol *
+ParticipacionJugadorTorneo 1 ----- N Gol * 
+
+
+// TARJETAS
+
+Partido                    1 ----- N Tarjeta *
+ParticipacionJugadorTorneo 1 ----- N Tarjeta * 
+
+
+// SUSPENSIONES
+
+ParticipacionJugadorTorneo 1 ----- N Suspensión * 
+
+Suspensión 1 ----- N TarjetaDeSuspension *
+Tarjeta    1 ----- N TarjetaDeSuspension *
+
+
+// RANKING HISTÓRICO POR JORNADA
+
+Serie                     1 ----- N RankingJornada *
+Jornada                   1 ----- N RankingJornada *
+ParticipacionEquipoTorneo 1 ----- N RankingJornada *
+
+------NOTAS DEL BOCETO-------
+
+
+//ParticipacionJugadorTorneo --> La participación de un jugador determinado, con un equipo determinado, en un torneo determinado.
+
+//ParticipacionEquipoTorneo --> La participación de un equipo determinado, en una serie determinada, en un torneo determinado.
+
+//ParticipacionJugadorPartido --> La participación de un jugador determinado en un partido determinado, permitiendo registrar si participó como titular o suplente y sus minutos jugados.
+
+//TarjetaDeSuspension -->Tabla intermedia que relaciona una suspensión con la tarjeta o tarjetas que la originaron, permitiendo conservar el historial y conocer exactamente qué sanciones produjeron una suspensión.
+
