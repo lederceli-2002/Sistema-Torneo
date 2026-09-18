@@ -2,14 +2,13 @@ package com.leder.sistematorneos.entity;
 
 import jakarta.persistence.*;
 
-
 @Entity
 @Table(name = "Equipo")
 public class Equipo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idEquipo;
-
+    
     @Column(nullable = false, length = 150)
     private String nombre;
 

@@ -4,11 +4,13 @@ import com.leder.sistematorneos.entity.Torneo;
 import com.leder.sistematorneos.service.TorneoService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import com.leder.sistematorneos.DTO.TorneoDTO;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/SistemaFutbol/Torneos")
+@RequestMapping("/api/torneos")
+@CrossOrigin(origins = "http://localhost:5176")
 public class TorneoController {
 
     private final TorneoService torneoService;
@@ -32,6 +34,10 @@ public class TorneoController {
         return torneoService.listarTorneos();
     }
 
+    @GetMapping("/tarjeteros")
+    public List<TorneoDTO> listarTarjeteros(){
+        return torneoService.listarTarjeteros();
+    }
     @PutMapping
     public Torneo actualizarTorneo(@RequestBody Torneo torneo){
         return torneoService.modificarTorneo(torneo);

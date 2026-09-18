@@ -1,0 +1,53 @@
+CREATE OR REPLACE FUNCTION fn_listar_tarjeteros_torneos()
+RETURNS TABLE (
+    id_torneo INT,
+    nombre VARCHAR,
+    estado VARCHAR,
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    cantidad_equipos BIGINT,
+    series BIGINT,
+    proxima_jornada INT
+) 
+LANGUAGE plpgsql
+AS $$ 
+BEGIN
+    RETURN QUERY
+    SELECT 
+        t.id_torneo, 
+        t.nombre, 
+        t.estado, 
+        t.fecha_inicio, 
+        t.fecha_fin,
+
+        (SELECT COUNT(*) 
+         FROM participacion_equipo_torneo p
+         WHERE p.id_torneo = t.id_torneo) AS cantidad_equipos,
+
+        (SELECT COUNT(*) 
+         FROM serie s
+         INNER JOIN fase f ON s.id_fase = f.id_fase
+         WHERE f.id_torneo = t.id_torneo) AS series,
+
+        (SELECT DISTINCT j.numero 
+         FROM partido p 
+         INNER JOIN jornada j ON p.id_jornada = j.id_jornada
+         INNER JOIN serie s ON j.id_serie = s.id_serie
+         INNER JOIN fase f ON s.id_fase = f.id_fase
+         WHERE p.fecha_juego = (
+             SELECT MIN(p2.fecha_juego)
+             FROM partido p2
+             INNER JOIN jornada j2 ON p2.id_jornada = j2.id_jornada
+             INNER JOIN serie s2 ON j2.id_serie = s2.id_serie
+             INNER JOIN fase f2 ON s2.id_fase = f2.id_fase
+             WHERE p2.fecha_juego >= CURRENT_DATE 
+               AND f2.id_torneo = t.id_torneo
+         ) AND f.id_torneo = t.id_torneo
+         LIMIT 1) AS proxima_jornada 
+
+    FROM torneo t; 
+END; 
+$$;
+
+SELECT * FROM fn_listar_tarjeteros_torneos();
+

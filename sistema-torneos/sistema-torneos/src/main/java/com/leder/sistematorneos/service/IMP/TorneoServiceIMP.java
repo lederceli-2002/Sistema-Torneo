@@ -1,10 +1,12 @@
 package com.leder.sistematorneos.service.IMP;
 
+import com.leder.sistematorneos.DTO.TorneoDTO;
 import com.leder.sistematorneos.entity.Torneo;
 import com.leder.sistematorneos.service.TorneoService;
 import com.leder.sistematorneos.repository.TorneoRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -15,6 +17,13 @@ public class TorneoServiceIMP implements TorneoService {
 
     public TorneoServiceIMP(TorneoRepository _TorneoRepository){
         this._TorneoRepository=_TorneoRepository;
+    }
+
+    @Override
+    public List<TorneoDTO> listarTarjeteros() {
+        //le metemos la lista de la segunda Interfaz
+        List<TorneoDTO> tarjeteros = _TorneoRepository.tarjeterosTorneo();
+        return tarjeteros;
     }
 
     @Override
