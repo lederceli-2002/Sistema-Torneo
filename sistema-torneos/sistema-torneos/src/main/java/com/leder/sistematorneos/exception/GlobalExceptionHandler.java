@@ -54,6 +54,21 @@ public class GlobalExceptionHandler {
 
 
     
+    @ExceptionHandler(DatosInvalidosException.class)
+    public ResponseEntity<ErrorResponse> manejarDatosInvalidos(
+            DatosInvalidosException ex, HttpServletRequest request) {
+
+        ErrorResponse body = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.badRequest().body(body);
+    }
+
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> manejarValidacion(
             MethodArgumentNotValidException ex, HttpServletRequest request) {

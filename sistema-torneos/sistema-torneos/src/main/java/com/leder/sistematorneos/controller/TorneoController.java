@@ -2,7 +2,7 @@ package com.leder.sistematorneos.controller;
 
 import com.leder.sistematorneos.entity.Torneo;
 import com.leder.sistematorneos.service.TorneoService;
-import org.springframework.stereotype.Controller;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import com.leder.sistematorneos.DTO.TorneoDTO;
 
@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/torneos")
-@CrossOrigin(origins = "http://localhost:5176")
 public class TorneoController {
 
     private final TorneoService torneoService;
@@ -20,7 +19,7 @@ public class TorneoController {
     }
 
     @PostMapping
-    public Torneo registrarTorneo(@RequestBody Torneo torneo){
+    public Torneo registrarTorneo(@Valid @RequestBody Torneo torneo){
         return torneoService.registrarTorneo(torneo);
     }
 
@@ -38,8 +37,9 @@ public class TorneoController {
     public List<TorneoDTO> listarTarjeteros(){
         return torneoService.listarTarjeteros();
     }
+
     @PutMapping
-    public Torneo actualizarTorneo(@RequestBody Torneo torneo){
+    public Torneo actualizarTorneo(@Valid @RequestBody Torneo torneo){
         return torneoService.modificarTorneo(torneo);
     }
 
@@ -47,6 +47,5 @@ public class TorneoController {
     public boolean eliminarTorneo(@PathVariable int id){
         return torneoService.eliminarTorneo(id);
     }
-
 
 }

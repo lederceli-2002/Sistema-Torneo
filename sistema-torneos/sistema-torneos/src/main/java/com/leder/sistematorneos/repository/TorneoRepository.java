@@ -1,4 +1,3 @@
-// TorneoRepository.java
 package com.leder.sistematorneos.repository;
 
 import com.leder.sistematorneos.DTO.TorneoDTO;
@@ -8,7 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface TorneoRepository extends JpaRepository<Torneo, Integer>,TorneoRepositoryCustom{
+public interface TorneoRepository extends JpaRepository<Torneo, Integer>, TorneoRepositoryCustom {
+
+    boolean existsByNombreIgnoreCase(String nombre);
+
+    boolean existsByNombreIgnoreCaseAndIdTorneoNot(String nombre, Integer idTorneo);
 }
 
 

@@ -1,11 +1,13 @@
 package com.leder.sistematorneos.service.IMP;
 
 import com.leder.sistematorneos.entity.Jugador;
+import com.leder.sistematorneos.exception.RecursoNoEncontradoException;
 import com.leder.sistematorneos.repository.JugadorRepository;
 import com.leder.sistematorneos.service.JugadorService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 @Service
 public class JugadorServiceIMP implements JugadorService {
 
@@ -21,10 +23,8 @@ public class JugadorServiceIMP implements JugadorService {
 
     @Override
     public Jugador consultarJugador(int id) {
-        if(!jugadorRepository.existsById(id)){
-            return null;
-        }
-        return jugadorRepository.findById(id).orElse(null);
+        return jugadorRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Jugador no encontrado con id " + id));
     }
 
     @Override
@@ -34,13 +34,16 @@ public class JugadorServiceIMP implements JugadorService {
 
     @Override
     public Jugador modificarJugador(Jugador jugador) {
+        if (!jugadorRepository.existsById(jugador.getIdJugador())) {
+            throw new RecursoNoEncontradoException("Jugador no encontrado con id " + jugador.getIdJugador());
+        }
         return jugadorRepository.save(jugador);
     }
 
     @Override
     public boolean eliminarJugador(int id) {
-        if(!jugadorRepository.existsById(id)){
-            return false;
+        if (!jugadorRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Jugador no encontrado con id " + id);
         }
         jugadorRepository.deleteById(id);
         return true;
