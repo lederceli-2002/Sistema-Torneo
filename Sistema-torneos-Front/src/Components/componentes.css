@@ -1,0 +1,119 @@
+/* =========================
+   ENCABEZADO DE PÁGINA
+   ========================= */
+.encabezado-pagina {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.encabezado-pagina h1 { margin: 0 0 6px; }
+.encabezado-pagina p { margin: 0; color: #6b7785; }
+.encabezado-acciones { display: flex; gap: 10px; flex-shrink: 0; }
+
+/* =========================
+   AVISO (éxito / error)
+   ========================= */
+.aviso {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.aviso-cerrar {
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+}
+
+/* =========================
+   ETIQUETA DE ESTADO
+   ========================= */
+.etiqueta {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.etiqueta-verde    { background-color: #d8f3df; color: #287a3e; }
+.etiqueta-azul     { background-color: #e1edfd; color: #1360b8; }
+.etiqueta-amarillo { background-color: #fdf1d6; color: #8a5a00; }
+.etiqueta-rojo     { background-color: #fde2e1; color: #a1260d; }
+.etiqueta-gris     { background-color: #e7ebf0; color: #5f6368; }
+
+/* =========================
+   TABLA
+   ========================= */
+.tabla-contenedor {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e3e7ec;
+    border-radius: 7px;
+}
+.tabla-contenedor .tabla th:first-child,
+.tabla-contenedor .tabla td:first-child { padding-left: 14px; }
+
+/* =========================
+   MODAL
+   ========================= */
+.modal-fondo {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(31, 42, 54, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+}
+.modal {
+    background-color: white;
+    border-radius: 9px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+.modal-encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e3e7ec;
+}
+.modal-encabezado h2 { margin: 0; font-size: 20px; }
+.modal-cerrar {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #6b7785;
+}
+.modal-cuerpo { padding: 22px; }
+
+/* Dentro del modal el formulario no lleva su propio borde */
+.modal .formulario {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* =========================
+   SELECTOR (torneo / serie / jornada)
+   ========================= */
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.filtros .campo { min-width: 200px; }
