@@ -1,4 +1,9 @@
 import { useEffect, useState } from "react";
+import EncabezadoPagina from "../Components/EncabezadoPagina";
+import Aviso from "../Components/Aviso";
+import Tabla from "../Components/Tabla";
+import Modal from "../Components/Modal";
+import EtiquetaEstado from "../Components/EtiquetaEstado";
 import {
     listarJugadores,
     registrarJugador,
@@ -6,7 +11,7 @@ import {
     eliminarJugador,
 } from "../Services/jugadorService.js";
 
-// formulario vacio
+// Formulario vacío (idJugador null = registrar, con id = editar)
 const jugadorVacio = {
     idJugador: null,
     nombres: "",
@@ -18,14 +23,14 @@ const jugadorVacio = {
 };
 
 function Jugadores() {
-    //estados de la pantalla
     const [jugadores, setJugadores] = useState([]);
     const [formulario, setFormulario] = useState(jugadorVacio);
+    const [modalAbierto, setModalAbierto] = useState(false);
     const [busqueda, setBusqueda] = useState("");
-    const [error, setError] = useState("");
+    const [error, setError] = useState("");          // errores de la página
+    const [errorFormulario, setErrorFormulario] = useState(""); // errores dentro del modal
     const [exito, setExito] = useState("");
 
-    // carga la lista de jugadores desde el backend
     async function cargarJugadores() {
         try {
             setJugadores(await listarJugadores());
@@ -33,22 +38,44 @@ function Jugadores() {
             setError(e.message);
         }
     }
-    // hace que cargue la lista al abrir la pantalla
+
+    // Carga la lista al abrir la pantalla
     useEffect(() => {
         cargarJugadores();
     }, []);
 
-    // actualiza el campo que el usuario esta escribiendo
+    // ---------- Abrir y cerrar el modal ----------
+    function abrirNuevo() {
+        setFormulario(jugadorVacio);
+        setErrorFormulario("");
+        setModalAbierto(true);
+    }
+
+    function abrirEditar(jugador) {
+        setFormulario({
+            ...jugador,
+            fechaNacimiento: jugador.fechaNacimiento ?? "",
+            dni: jugador.dni ?? "",
+            nacionalidad: jugador.nacionalidad ?? "",
+        });
+        setErrorFormulario("");
+        setModalAbierto(true);
+    }
+
+    function cerrarModal() {
+        setModalAbierto(false);
+    }
+
+    // ---------- Formulario ----------
     function cambiarCampo(e) {
         setFormulario({ ...formulario, [e.target.name]: e.target.value });
     }
 
     async function guardar(e) {
         e.preventDefault();
-        setError("");
-        setExito("");
+        setErrorFormulario("");
 
-        // los campos opcionales que no se llenen se mandan como null
+        // Los campos opcionales vacíos se mandan como null
         const jugador = {
             ...formulario,
             fechaNacimiento: formulario.fechaNacimiento || null,
@@ -64,24 +91,12 @@ function Jugadores() {
                 await registrarJugador(jugador);
                 setExito("Jugador registrado correctamente");
             }
-            setFormulario(jugadorVacio);
+            setModalAbierto(false);
             cargarJugadores();
         } catch (e) {
-            // muestra el mensaje del backend 
-            setError(e.message);
+            // El error se muestra dentro del modal, sin cerrarlo
+            setErrorFormulario(e.message);
         }
-    }
-
-    // pasa los datos del jugador al formulario para editarlo
-    function editar(jugador) {
-        setError("");
-        setExito("");
-        setFormulario({
-            ...jugador,
-            fechaNacimiento: jugador.fechaNacimiento ?? "",
-            dni: jugador.dni ?? "",
-            nacionalidad: jugador.nacionalidad ?? "",
-        });
     }
 
     async function eliminar(jugador) {
@@ -97,67 +112,39 @@ function Jugadores() {
         }
     }
 
-    // filtra por nombre, apellido o DNI
+    // ---------- Búsqueda ----------
     const texto = busqueda.toLowerCase();
     const jugadoresFiltrados = jugadores.filter((j) =>
         `${j.nombres} ${j.apellidos} ${j.dni ?? ""}`.toLowerCase().includes(texto)
     );
 
+    // ---------- Columnas de la tabla ----------
+    const columnas = [
+        { titulo: "Nombres", campo: "nombres" },
+        { titulo: "Apellidos", campo: "apellidos" },
+        { titulo: "DNI", campo: "dni" },
+        { titulo: "Nacionalidad", campo: "nacionalidad" },
+        { titulo: "Estado", render: (j) => <EtiquetaEstado estado={j.estado} /> },
+        {
+            titulo: "Acciones",
+            render: (j) => (
+                <div className="acciones">
+                    <button className="btn btn-secundario" onClick={() => abrirEditar(j)}>Editar</button>
+                    <button className="btn btn-peligro" onClick={() => eliminar(j)}>Eliminar</button>
+                </div>
+            ),
+        },
+    ];
+
     return (
         <div className="contenedor-pagina">
-            <h1>Jugadores</h1>
-            <p>Registro y mantenimiento de los jugadores del torneo.</p>
+            <EncabezadoPagina titulo="Jugadores" descripcion="Registro y mantenimiento de los jugadores del torneo.">
+                <button className="btn" onClick={abrirNuevo}>+ Nuevo jugador</button>
+            </EncabezadoPagina>
 
-            {error && <div className="aviso aviso-error">{error}</div>}
-            {exito && <div className="aviso aviso-exito">{exito}</div>}
+            <Aviso tipo="error" mensaje={error} onCerrar={() => setError("")} />
+            <Aviso tipo="exito" mensaje={exito} onCerrar={() => setExito("")} />
 
-            {/* ---------- FORMULARIO ---------- */}
-            <form className="formulario" onSubmit={guardar}>
-                <h2>{formulario.idJugador ? "Editar jugador" : "Nuevo jugador"}</h2>
-
-                <div className="formulario-grilla">
-                    <label className="campo">
-                        Nombres *
-                        <input name="nombres" value={formulario.nombres} onChange={cambiarCampo} />
-                    </label>
-                    <label className="campo">
-                        Apellidos *
-                        <input name="apellidos" value={formulario.apellidos} onChange={cambiarCampo} />
-                    </label>
-                    <label className="campo">
-                        Fecha de nacimiento
-                        <input type="date" name="fechaNacimiento" value={formulario.fechaNacimiento} onChange={cambiarCampo} />
-                    </label>
-                    <label className="campo">
-                        DNI
-                        <input name="dni" maxLength={20} value={formulario.dni} onChange={cambiarCampo} />
-                    </label>
-                    <label className="campo">
-                        Nacionalidad
-                        <input name="nacionalidad" value={formulario.nacionalidad} onChange={cambiarCampo} />
-                    </label>
-                    <label className="campo">
-                        Estado *
-                        <select name="estado" value={formulario.estado} onChange={cambiarCampo}>
-                            <option>Activo</option>
-                            <option>Inactivo</option>
-                        </select>
-                    </label>
-                </div>
-
-                <div className="formulario-botones">
-                    {formulario.idJugador && (
-                        <button type="button" className="btn btn-secundario" onClick={() => setFormulario(jugadorVacio)}>
-                            Cancelar
-                        </button>
-                    )}
-                    <button type="submit" className="btn">
-                        {formulario.idJugador ? "Guardar cambios" : "Registrar"}
-                    </button>
-                </div>
-            </form>
-
-            {/* ---------- LISTADO ---------- */}
             <input
                 className="buscador"
                 placeholder="Buscar por nombre, apellido o DNI..."
@@ -165,38 +152,60 @@ function Jugadores() {
                 onChange={(e) => setBusqueda(e.target.value)}
             />
 
-            <table className="tabla">
-                <thead>
-                    <tr>
-                        <th>Nombres</th>
-                        <th>Apellidos</th>
-                        <th>DNI</th>
-                        <th>Nacionalidad</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {jugadoresFiltrados.map((j) => (
-                        <tr key={j.idJugador}>
-                            <td>{j.nombres}</td>
-                            <td>{j.apellidos}</td>
-                            <td>{j.dni ?? "-"}</td>
-                            <td>{j.nacionalidad ?? "-"}</td>
-                            <td>{j.estado}</td>
-                            <td className="acciones">
-                                <button className="btn btn-secundario" onClick={() => editar(j)}>Editar</button>
-                                <button className="btn btn-peligro" onClick={() => eliminar(j)}>Eliminar</button>
-                            </td>
-                        </tr>
-                    ))}
-                    {jugadoresFiltrados.length === 0 && (
-                        <tr>
-                            <td colSpan={6} className="tabla-vacia">No hay jugadores para mostrar</td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+            <Tabla
+                columnas={columnas}
+                filas={jugadoresFiltrados}
+                claveFila="idJugador"
+                mensajeVacio="No hay jugadores para mostrar"
+            />
+
+            {/* ---------- Modal de registro / edición ---------- */}
+            <Modal
+                abierto={modalAbierto}
+                titulo={formulario.idJugador ? "Editar jugador" : "Nuevo jugador"}
+                onCerrar={cerrarModal}
+            >
+                <Aviso tipo="error" mensaje={errorFormulario} />
+
+                <form className="formulario" onSubmit={guardar}>
+                    <div className="formulario-grilla">
+                        <label className="campo">
+                            Nombres *
+                            <input name="nombres" value={formulario.nombres} onChange={cambiarCampo} autoFocus />
+                        </label>
+                        <label className="campo">
+                            Apellidos *
+                            <input name="apellidos" value={formulario.apellidos} onChange={cambiarCampo} />
+                        </label>
+                        <label className="campo">
+                            Fecha de nacimiento
+                            <input type="date" name="fechaNacimiento" value={formulario.fechaNacimiento} onChange={cambiarCampo} />
+                        </label>
+                        <label className="campo">
+                            DNI
+                            <input name="dni" maxLength={20} value={formulario.dni} onChange={cambiarCampo} />
+                        </label>
+                        <label className="campo">
+                            Nacionalidad
+                            <input name="nacionalidad" value={formulario.nacionalidad} onChange={cambiarCampo} />
+                        </label>
+                        <label className="campo">
+                            Estado *
+                            <select name="estado" value={formulario.estado} onChange={cambiarCampo}>
+                                <option>Activo</option>
+                                <option>Inactivo</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div className="formulario-botones">
+                        <button type="button" className="btn btn-secundario" onClick={cerrarModal}>Cancelar</button>
+                        <button type="submit" className="btn">
+                            {formulario.idJugador ? "Guardar cambios" : "Registrar"}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 }
