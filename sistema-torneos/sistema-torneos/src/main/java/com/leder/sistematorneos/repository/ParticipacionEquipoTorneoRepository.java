@@ -7,4 +7,7 @@ public interface ParticipacionEquipoTorneoRepository
         extends JpaRepository<ParticipacionEquipoTorneo, Integer> {
 
     boolean existsByTorneo_IdTorneo(Integer idTorneo);
+
+    // ¿El equipo está inscrito en algún torneo?
+    boolean existsByEquipo_IdEquipo(Integer idEquipo);
 }
