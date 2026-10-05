@@ -1,4 +1,3 @@
-//Creamos la funcion tarjetero de torneos 
 import { useNavigate } from "react-router-dom";
 
 //Creamos la funcion tarjetero de torneos

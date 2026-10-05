@@ -4,6 +4,7 @@ import Layout from "./Components/Layout";
 import ListaTorneos from "./Pages/ListaTorneos";
 import Jugadores from "./Pages/Jugadores";
 import Torneos from "./Pages/Torneos";
+import Equipos from "./Pages/Equipos";
 import EnConstruccion from "./Pages/EnConstruccion";
 
 function App() {
@@ -12,7 +13,9 @@ function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<ListaTorneos />} />
         <Route path="/torneos" element={<Torneos />} />
+        <Route path="/equipos" element={<Equipos />} />
         <Route path="/jugadores" element={<Jugadores />} />
+        {/* Cualquier otra ruta todavía no implementada */}
         <Route path="*" element={<EnConstruccion />} />
       </Route>
     </Routes>
