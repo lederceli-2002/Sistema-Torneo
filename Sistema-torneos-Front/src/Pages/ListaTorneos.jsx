@@ -1,9 +1,13 @@
-import TarjetaTorneo from "../Components/TarjetaTorneo"
-import obtenerTorneos from "../Services/torneoService.js";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import TarjetaTorneo from "../Components/TarjetaTorneo"
+import EncabezadoPagina from "../Components/EncabezadoPagina";
+import obtenerTorneos from "../Services/torneoService.js";
 
 //Utilizamos una funcion de JS para crear la pagina y dentro armamos la pagina con JSX
 function ListaTorneos(){
+    const navegar = useNavigate();
+
     //---CARGAMOS LOS TORNEOS EN "torneos"
     const [torneos,setTorneos]=useState([]);
     useEffect(()=>{
@@ -20,8 +24,9 @@ function ListaTorneos(){
 
     return(
         <div className="contenedor-torneos">
-            <h1>Torneos activos</h1>
-            <p>Torneos que se estan disputando actualmente</p>
+            <EncabezadoPagina titulo="Torneos activos" descripcion="Torneos que se estan disputando actualmente">
+                <button className="btn" onClick={()=>navegar("/torneos?nuevo")}>+ Nuevo torneo</button>
+            </EncabezadoPagina>
 
             <div className="lista-torneosActivos">
                 {torneosActivos.map((torneo)=>(
