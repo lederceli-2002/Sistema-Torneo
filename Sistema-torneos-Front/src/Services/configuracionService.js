@@ -33,3 +33,16 @@ export function actualizarSerie(serie) {
 export function eliminarSerie(id) {
     return pedir(`/series/${id}`, { method: "DELETE" });
 }
+
+// ---------- Equipos inscritos en las series ----------
+export function listarEquiposInscritos(idTorneo) {
+    return pedir(`/inscripciones/equipos?idTorneo=${idTorneo}`);
+}
+
+export function inscribirEquipo(inscripcion) {
+    return pedir("/inscripciones/equipos", { method: "POST", body: JSON.stringify(inscripcion) });
+}
+
+export function retirarEquipo(idInscripcion) {
+    return pedir(`/inscripciones/equipos/${idInscripcion}`, { method: "DELETE" });
+}

@@ -5,6 +5,7 @@ import Aviso from "../Components/Aviso";
 import Tabla from "../Components/Tabla";
 import Modal from "../Components/Modal";
 import { consultarTorneo } from "../Services/torneoService.js";
+import { listarEquipos } from "../Services/equipoService.js";
 import {
     listarFases,
     registrarFase,
@@ -14,10 +15,13 @@ import {
     registrarSerie,
     actualizarSerie,
     eliminarSerie,
+    listarEquiposInscritos,
+    inscribirEquipo,
+    retirarEquipo,
 } from "../Services/configuracionService.js";
 import "./configuracion.css";
 
-// Configurar torneo: organiza el torneo en fases y cada fase en series (RF-02 y RF-03)
+// Configurar torneo: fases, series (RF-02, RF-03) y equipos de cada serie (RF-05)
 function ConfigurarTorneo() {
     const { idTorneo } = useParams();
     const navegar = useNavigate();
@@ -25,22 +29,31 @@ function ConfigurarTorneo() {
     const [torneo, setTorneo] = useState(null);
     const [fases, setFases] = useState([]);
     const [series, setSeries] = useState([]);
-    // Un solo modal para fase y serie: { tipo: "fase" | "serie", datos: {...} }
+    const [inscripciones, setInscripciones] = useState([]);
+    const [equipos, setEquipos] = useState([]);
+    // Modal de fase o serie: { tipo: "fase" | "serie", datos: {...} }
     const [modal, setModal] = useState(null);
+    // Serie cuyos equipos se están gestionando (modal de equipos)
+    const [serieEquipos, setSerieEquipos] = useState(null);
+    const [equipoElegido, setEquipoElegido] = useState("");
     const [error, setError] = useState("");
     const [errorFormulario, setErrorFormulario] = useState("");
     const [exito, setExito] = useState("");
 
     async function cargarDatos() {
         try {
-            const [datosTorneo, datosFases, datosSeries] = await Promise.all([
+            const [datosTorneo, datosFases, datosSeries, datosInscripciones, datosEquipos] = await Promise.all([
                 consultarTorneo(idTorneo),
                 listarFases(idTorneo),
                 listarSeriesDelTorneo(idTorneo),
+                listarEquiposInscritos(idTorneo),
+                listarEquipos(),
             ]);
             setTorneo(datosTorneo);
             setFases(datosFases);
             setSeries(datosSeries);
+            setInscripciones(datosInscripciones);
+            setEquipos(datosEquipos);
         } catch (e) {
             setError(e.message);
         }
@@ -53,8 +66,13 @@ function ConfigurarTorneo() {
     // Siguiente número de orden libre (1, 2, 3...)
     const siguienteOrden = (lista) => (lista.length ? Math.max(...lista.map((x) => x.orden)) + 1 : 1);
     const seriesDe = (idFase) => series.filter((s) => s.idFase === idFase);
+    const inscritosEn = (idSerie) => inscripciones.filter((i) => i.idSerie === idSerie);
 
-    // ---------- Abrir el modal ----------
+    // Equipos que se pueden inscribir: activos y que aún no están en ninguna serie de este torneo
+    const idsInscritos = new Set(inscripciones.map((i) => i.idEquipo));
+    const equiposDisponibles = equipos.filter((e) => e.estado === "Activo" && !idsInscritos.has(e.idEquipo));
+
+    // ---------- Modal de fase / serie ----------
     function abrirNuevaFase() {
         setErrorFormulario("");
         setModal({
@@ -85,7 +103,6 @@ function ConfigurarTorneo() {
         setModal({ ...modal, datos: { ...modal.datos, [e.target.name]: e.target.value } });
     }
 
-    // ---------- Guardar fase o serie ----------
     async function guardar(e) {
         e.preventDefault();
         setErrorFormulario("");
@@ -112,7 +129,7 @@ function ConfigurarTorneo() {
         }
     }
 
-    // ---------- Eliminar ----------
+    // ---------- Eliminar fase / serie ----------
     async function borrarFase(fase) {
         if (!window.confirm(`¿Eliminar la fase "${fase.nombre}"?`)) return;
         setError("");
@@ -122,7 +139,6 @@ function ConfigurarTorneo() {
             setExito("Fase eliminada");
             cargarDatos();
         } catch (e) {
-            // Ej.: "No se puede eliminar la fase: primero elimine sus series"
             setError(e.message);
         }
     }
@@ -136,23 +152,75 @@ function ConfigurarTorneo() {
             setExito("Serie eliminada");
             cargarDatos();
         } catch (e) {
-            // Ej.: "No se puede eliminar la serie: tiene equipos inscritos"
             setError(e.message);
         }
     }
 
-    // ---------- Columnas de la tabla de series ----------
+    // ---------- Equipos de una serie (RF-05) ----------
+    function abrirEquipos(serie) {
+        setErrorFormulario("");
+        setEquipoElegido("");
+        setSerieEquipos(serie);
+    }
+
+    async function agregarEquipo() {
+        setErrorFormulario("");
+        if (!equipoElegido) {
+            setErrorFormulario("Elige un equipo para inscribir");
+            return;
+        }
+        try {
+            await inscribirEquipo({ idSerie: serieEquipos.idSerie, idEquipo: Number(equipoElegido) });
+            setEquipoElegido("");
+            cargarDatos();
+        } catch (e) {
+            // Ej.: "El equipo ... ya esta inscrito en este torneo"
+            setErrorFormulario(e.message);
+        }
+    }
+
+    async function quitarEquipo(inscripcion) {
+        if (!window.confirm(`¿Retirar a ${inscripcion.nombreEquipo} de la serie?`)) return;
+        setErrorFormulario("");
+        try {
+            await retirarEquipo(inscripcion.idInscripcion);
+            cargarDatos();
+        } catch (e) {
+            // Ej.: "No se puede retirar el equipo: tiene jugadores inscritos en el torneo"
+            setErrorFormulario(e.message);
+        }
+    }
+
+    // ---------- Columnas ----------
     const columnasSeries = [
         { titulo: "Orden", campo: "orden" },
         { titulo: "Nombre", campo: "nombre" },
-        { titulo: "Descripcion", campo: "descripcion" },
+        {
+            titulo: "Equipos",
+            render: (s) => {
+                const cantidad = inscritosEn(s.idSerie).length;
+                return <span className="contador-equipos">{cantidad} {cantidad === 1 ? "equipo" : "equipos"}</span>;
+            },
+        },
         {
             titulo: "Acciones",
             render: (s) => (
                 <div className="acciones">
+                    <button className="btn" onClick={() => abrirEquipos(s)}>Equipos</button>
                     <button className="btn btn-secundario" onClick={() => abrirEditarSerie(s)}>Editar</button>
                     <button className="btn btn-peligro" onClick={() => borrarSerie(s)}>Eliminar</button>
                 </div>
+            ),
+        },
+    ];
+
+    const columnasInscritos = [
+        { titulo: "Equipo", campo: "nombreEquipo" },
+        { titulo: "Ciudad", campo: "ciudad" },
+        {
+            titulo: "Accion",
+            render: (i) => (
+                <button className="btn btn-peligro" onClick={() => quitarEquipo(i)}>Retirar</button>
             ),
         },
     ];
@@ -171,7 +239,7 @@ function ConfigurarTorneo() {
 
     return (
         <div className="contenedor-pagina">
-            <EncabezadoPagina titulo={`Configurar: ${torneo.nombre}`} descripcion="Organiza el torneo en fases y cada fase en series.">
+            <EncabezadoPagina titulo={`Configurar: ${torneo.nombre}`} descripcion="Organiza el torneo en fases, series y equipos participantes.">
                 <button className="btn btn-secundario" onClick={() => navegar("/torneos")}>Volver a torneos</button>
                 <button className="btn" onClick={abrirNuevaFase}>+ Nueva fase</button>
             </EncabezadoPagina>
@@ -253,6 +321,44 @@ function ConfigurarTorneo() {
                             <button type="submit" className="btn">{editando ? "Guardar cambios" : "Registrar"}</button>
                         </div>
                     </form>
+                )}
+            </Modal>
+
+            {/* ---------- Modal de equipos de una serie ---------- */}
+            <Modal
+                abierto={serieEquipos !== null}
+                titulo={`Equipos de la ${serieEquipos?.nombre ?? ""}`}
+                onCerrar={() => setSerieEquipos(null)}
+            >
+                <Aviso tipo="error" mensaje={errorFormulario} />
+
+                {serieEquipos && (
+                    <>
+                        <div className="fila-inscribir">
+                            <label className="campo">
+                                Inscribir equipo
+                                <select value={equipoElegido} onChange={(e) => setEquipoElegido(e.target.value)}>
+                                    <option value="">
+                                        {equiposDisponibles.length ? "Seleccione un equipo..." : "No hay equipos disponibles"}
+                                    </option>
+                                    {equiposDisponibles.map((e) => (
+                                        <option key={e.idEquipo} value={e.idEquipo}>{e.nombre}</option>
+                                    ))}
+                                </select>
+                            </label>
+                            <button className="btn" onClick={agregarEquipo}>+ Inscribir</button>
+                        </div>
+                        <p className="texto-suave">
+                            Solo aparecen los equipos activos que aun no estan inscritos en ninguna serie de este torneo.
+                        </p>
+
+                        <Tabla
+                            columnas={columnasInscritos}
+                            filas={inscritosEn(serieEquipos.idSerie)}
+                            claveFila="idInscripcion"
+                            mensajeVacio="Esta serie todavia no tiene equipos"
+                        />
+                    </>
                 )}
             </Modal>
         </div>
