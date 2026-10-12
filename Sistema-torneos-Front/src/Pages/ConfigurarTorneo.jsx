@@ -6,6 +6,7 @@ import Tabla from "../Components/Tabla";
 import Modal from "../Components/Modal";
 import { consultarTorneo } from "../Services/torneoService.js";
 import { listarEquipos } from "../Services/equipoService.js";
+import { listarJugadores } from "../Services/jugadorService.js";
 import {
     listarFases,
     registrarFase,
@@ -18,10 +19,14 @@ import {
     listarEquiposInscritos,
     inscribirEquipo,
     retirarEquipo,
+    listarJugadoresInscritos,
+    inscribirJugador,
+    retirarJugador,
 } from "../Services/configuracionService.js";
 import "./configuracion.css";
 
-// Configurar torneo: fases, series (RF-02, RF-03) y equipos de cada serie (RF-05)
+// Configurar torneo: fases, series (RF-02, RF-03), equipos de cada serie (RF-05)
+// y jugadores de cada equipo en el torneo (RF-07)
 function ConfigurarTorneo() {
     const { idTorneo } = useParams();
     const navegar = useNavigate();
@@ -31,29 +36,39 @@ function ConfigurarTorneo() {
     const [series, setSeries] = useState([]);
     const [inscripciones, setInscripciones] = useState([]);
     const [equipos, setEquipos] = useState([]);
+    const [inscripcionesJugadores, setInscripcionesJugadores] = useState([]);
+    const [jugadores, setJugadores] = useState([]);
     // Modal de fase o serie: { tipo: "fase" | "serie", datos: {...} }
     const [modal, setModal] = useState(null);
     // Serie cuyos equipos se están gestionando (modal de equipos)
     const [serieEquipos, setSerieEquipos] = useState(null);
     const [equipoElegido, setEquipoElegido] = useState("");
+    // Equipo cuyos jugadores se están gestionando (modal de jugadores)
+    const [equipoJugadores, setEquipoJugadores] = useState(null);
+    const [nuevoJugador, setNuevoJugador] = useState({ idJugador: "", numeroCamiseta: "" });
     const [error, setError] = useState("");
     const [errorFormulario, setErrorFormulario] = useState("");
     const [exito, setExito] = useState("");
 
     async function cargarDatos() {
         try {
-            const [datosTorneo, datosFases, datosSeries, datosInscripciones, datosEquipos] = await Promise.all([
-                consultarTorneo(idTorneo),
-                listarFases(idTorneo),
-                listarSeriesDelTorneo(idTorneo),
-                listarEquiposInscritos(idTorneo),
-                listarEquipos(),
-            ]);
+            const [datosTorneo, datosFases, datosSeries, datosInscripciones, datosEquipos, datosInscJugadores, datosJugadores] =
+                await Promise.all([
+                    consultarTorneo(idTorneo),
+                    listarFases(idTorneo),
+                    listarSeriesDelTorneo(idTorneo),
+                    listarEquiposInscritos(idTorneo),
+                    listarEquipos(),
+                    listarJugadoresInscritos(idTorneo),
+                    listarJugadores(),
+                ]);
             setTorneo(datosTorneo);
             setFases(datosFases);
             setSeries(datosSeries);
             setInscripciones(datosInscripciones);
             setEquipos(datosEquipos);
+            setInscripcionesJugadores(datosInscJugadores);
+            setJugadores(datosJugadores);
         } catch (e) {
             setError(e.message);
         }
@@ -71,6 +86,11 @@ function ConfigurarTorneo() {
     // Equipos que se pueden inscribir: activos y que aún no están en ninguna serie de este torneo
     const idsInscritos = new Set(inscripciones.map((i) => i.idEquipo));
     const equiposDisponibles = equipos.filter((e) => e.estado === "Activo" && !idsInscritos.has(e.idEquipo));
+
+    // Jugadores de un equipo y jugadores que aún se pueden inscribir en el torneo
+    const jugadoresDe = (idEquipo) => inscripcionesJugadores.filter((i) => i.idEquipo === idEquipo);
+    const idsJugadoresInscritos = new Set(inscripcionesJugadores.map((i) => i.idJugador));
+    const jugadoresDisponibles = jugadores.filter((j) => j.estado === "Activo" && !idsJugadoresInscritos.has(j.idJugador));
 
     // ---------- Modal de fase / serie ----------
     function abrirNuevaFase() {
@@ -191,6 +211,65 @@ function ConfigurarTorneo() {
         }
     }
 
+    // ---------- Jugadores de un equipo (RF-07) ----------
+    function abrirJugadores(inscripcionEquipo) {
+        setErrorFormulario("");
+        setNuevoJugador({ idJugador: "", numeroCamiseta: "" });
+        setSerieEquipos(null);
+        setEquipoJugadores(inscripcionEquipo);
+    }
+
+    // Vuelve al modal de equipos de la serie del equipo
+    function volverAEquipos() {
+        const serie = series.find((s) => s.idSerie === equipoJugadores.idSerie);
+        setEquipoJugadores(null);
+        abrirEquipos(serie);
+    }
+
+    // Propone el siguiente número de camiseta libre del equipo
+    function siguienteCamiseta(idEquipo) {
+        const usados = new Set(jugadoresDe(idEquipo).map((i) => i.numeroCamiseta));
+        let numero = 1;
+        while (usados.has(numero) && numero < 99) numero++;
+        return numero;
+    }
+
+    async function agregarJugador() {
+        setErrorFormulario("");
+        if (!nuevoJugador.idJugador) {
+            setErrorFormulario("Elige un jugador para inscribir");
+            return;
+        }
+        const numero = nuevoJugador.numeroCamiseta === ""
+            ? siguienteCamiseta(equipoJugadores.idEquipo)
+            : Number(nuevoJugador.numeroCamiseta);
+        try {
+            await inscribirJugador({
+                idTorneo: Number(idTorneo),
+                idEquipo: equipoJugadores.idEquipo,
+                idJugador: Number(nuevoJugador.idJugador),
+                numeroCamiseta: numero,
+            });
+            setNuevoJugador({ idJugador: "", numeroCamiseta: "" });
+            cargarDatos();
+        } catch (e) {
+            // Ej.: "El numero 9 ya lo usa otro jugador de ..."
+            setErrorFormulario(e.message);
+        }
+    }
+
+    async function quitarJugador(inscripcion) {
+        if (!window.confirm(`¿Retirar a ${inscripcion.nombreJugador} del equipo?`)) return;
+        setErrorFormulario("");
+        try {
+            await retirarJugador(inscripcion.idInscripcion);
+            cargarDatos();
+        } catch (e) {
+            // Ej.: "No se puede retirar al jugador: ya tiene partidos registrados en el torneo"
+            setErrorFormulario(e.message);
+        }
+    }
+
     // ---------- Columnas ----------
     const columnasSeries = [
         { titulo: "Orden", campo: "orden" },
@@ -217,10 +296,26 @@ function ConfigurarTorneo() {
     const columnasInscritos = [
         { titulo: "Equipo", campo: "nombreEquipo" },
         { titulo: "Ciudad", campo: "ciudad" },
+        { titulo: "Jugadores", render: (i) => <span className="contador-equipos">{jugadoresDe(i.idEquipo).length}</span> },
+        {
+            titulo: "Acciones",
+            render: (i) => (
+                <div className="acciones">
+                    <button className="btn" onClick={() => abrirJugadores(i)}>Jugadores</button>
+                    <button className="btn btn-peligro" onClick={() => quitarEquipo(i)}>Retirar</button>
+                </div>
+            ),
+        },
+    ];
+
+    const columnasJugadores = [
+        { titulo: "N.", render: (i) => <span className="numero-camiseta">{i.numeroCamiseta}</span> },
+        { titulo: "Jugador", campo: "nombreJugador" },
+        { titulo: "DNI", campo: "dni" },
         {
             titulo: "Accion",
             render: (i) => (
-                <button className="btn btn-peligro" onClick={() => quitarEquipo(i)}>Retirar</button>
+                <button className="btn btn-peligro" onClick={() => quitarJugador(i)}>Retirar</button>
             ),
         },
     ];
@@ -358,6 +453,65 @@ function ConfigurarTorneo() {
                             claveFila="idInscripcion"
                             mensajeVacio="Esta serie todavia no tiene equipos"
                         />
+                    </>
+                )}
+            </Modal>
+
+            {/* ---------- Modal de jugadores de un equipo ---------- */}
+            <Modal
+                abierto={equipoJugadores !== null}
+                titulo={`Jugadores de ${equipoJugadores?.nombreEquipo ?? ""}`}
+                onCerrar={() => setEquipoJugadores(null)}
+            >
+                <Aviso tipo="error" mensaje={errorFormulario} />
+
+                {equipoJugadores && (
+                    <>
+                        <div className="fila-inscribir">
+                            <label className="campo">
+                                Inscribir jugador
+                                <select
+                                    value={nuevoJugador.idJugador}
+                                    onChange={(e) => setNuevoJugador({ ...nuevoJugador, idJugador: e.target.value })}
+                                >
+                                    <option value="">
+                                        {jugadoresDisponibles.length ? "Seleccione un jugador..." : "No hay jugadores disponibles"}
+                                    </option>
+                                    {jugadoresDisponibles.map((j) => (
+                                        <option key={j.idJugador} value={j.idJugador}>
+                                            {j.nombres} {j.apellidos}{j.dni ? ` (DNI ${j.dni})` : ""}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="campo campo-camiseta">
+                                Camiseta
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="99"
+                                    placeholder={String(siguienteCamiseta(equipoJugadores.idEquipo))}
+                                    value={nuevoJugador.numeroCamiseta}
+                                    onChange={(e) => setNuevoJugador({ ...nuevoJugador, numeroCamiseta: e.target.value })}
+                                />
+                            </label>
+                            <button className="btn" onClick={agregarJugador}>+ Inscribir</button>
+                        </div>
+                        <p className="texto-suave">
+                            Solo aparecen los jugadores activos que aun no estan inscritos en este torneo.
+                            Si dejas la camiseta vacia, se usa el siguiente numero libre.
+                        </p>
+
+                        <Tabla
+                            columnas={columnasJugadores}
+                            filas={jugadoresDe(equipoJugadores.idEquipo)}
+                            claveFila="idInscripcion"
+                            mensajeVacio="Este equipo todavia no tiene jugadores inscritos"
+                        />
+
+                        <div className="formulario-botones">
+                            <button className="btn btn-secundario" onClick={volverAEquipos}>Volver a los equipos de la serie</button>
+                        </div>
                     </>
                 )}
             </Modal>

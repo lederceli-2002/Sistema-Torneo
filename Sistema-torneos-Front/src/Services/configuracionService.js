@@ -46,3 +46,16 @@ export function inscribirEquipo(inscripcion) {
 export function retirarEquipo(idInscripcion) {
     return pedir(`/inscripciones/equipos/${idInscripcion}`, { method: "DELETE" });
 }
+
+// ---------- Jugadores inscritos en los equipos del torneo ----------
+export function listarJugadoresInscritos(idTorneo) {
+    return pedir(`/inscripciones/jugadores?idTorneo=${idTorneo}`);
+}
+
+export function inscribirJugador(inscripcion) {
+    return pedir("/inscripciones/jugadores", { method: "POST", body: JSON.stringify(inscripcion) });
+}
+
+export function retirarJugador(idInscripcion) {
+    return pedir(`/inscripciones/jugadores/${idInscripcion}`, { method: "DELETE" });
+}

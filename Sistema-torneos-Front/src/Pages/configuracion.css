@@ -60,4 +60,21 @@
     align-items: flex-end;
     margin-bottom: 6px;
 }
-.fila-inscribir .campo { flex: 1; }
+.fila-inscribir .campo { flex: 1; min-width: 0; }
+.fila-inscribir select { width: 100%; }
+
+/* ---------- Jugadores de un equipo ---------- */
+.fila-inscribir .campo-camiseta { flex: 0 0 110px; }
+.numero-camiseta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #263746;
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+}
+.fila-inscribir .btn { white-space: nowrap; }
