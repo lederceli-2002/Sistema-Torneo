@@ -43,3 +43,21 @@
 .estado-vacio p { margin: 0 0 14px; }
 
 .texto-suave { color: #7a8591; font-size: 13px; margin: 0 0 12px; }
+
+/* ---------- Equipos de una serie ---------- */
+.contador-equipos {
+    display: inline-block;
+    background-color: #f4f6f8;
+    color: #3c4650;
+    font-size: 13px;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+
+.fila-inscribir {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    margin-bottom: 6px;
+}
+.fila-inscribir .campo { flex: 1; }
