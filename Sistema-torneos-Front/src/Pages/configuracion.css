@@ -1,0 +1,45 @@
+/* Estilos de Configurar torneo */
+
+.tarjeta-fase {
+    border: 1px solid #d9dee5;
+    border-left: 4px solid #1677e8;
+    border-radius: 7px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.tarjeta-fase-encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.tarjeta-fase-encabezado h2 { margin: 0; font-size: 18px; }
+.tarjeta-fase-encabezado p { margin: 4px 0 0; color: #6b7785; font-size: 14px; }
+
+.etiqueta-orden {
+    display: inline-block;
+    background-color: #e1edfd;
+    color: #1360b8;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 3px 9px;
+    border-radius: 999px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.estado-vacio {
+    text-align: center;
+    padding: 40px 20px;
+    border: 1px dashed #c5ccd5;
+    border-radius: 9px;
+    color: #6b7785;
+}
+.estado-vacio p { margin: 0 0 14px; }
+
+.texto-suave { color: #7a8591; font-size: 13px; margin: 0 0 12px; }

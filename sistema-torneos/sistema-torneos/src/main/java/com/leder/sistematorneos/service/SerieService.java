@@ -1,18 +1,20 @@
 package com.leder.sistematorneos.service;
 
-import com.leder.sistematorneos.entity.Serie;
+import com.leder.sistematorneos.DTO.SerieDTO;
 
 import java.util.List;
 
 public interface SerieService {
 
-    Serie registrarSerie(Serie serie);
+    List<SerieDTO> listarPorFase(int idFase);
 
-    Serie consultarSerie(int id);
+    List<SerieDTO> listarPorTorneo(int idTorneo);
 
-    List<Serie> listarSeries();
+    SerieDTO consultarSerie(int id);
 
-    Serie modificarSerie(Serie serie);
+    SerieDTO registrarSerie(SerieDTO serie);
+
+    SerieDTO modificarSerie(SerieDTO serie);
 
     boolean eliminarSerie(int id);
 }
