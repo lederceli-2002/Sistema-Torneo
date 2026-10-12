@@ -9,6 +9,10 @@ export function listarTorneos() {
     return pedir("/torneos");
 }
 
+export function consultarTorneo(id) {
+    return pedir(`/torneos/${id}`);
+}
+
 export function registrarTorneo(torneo) {
     return pedir("/torneos", { method: "POST", body: JSON.stringify(torneo) });
 }

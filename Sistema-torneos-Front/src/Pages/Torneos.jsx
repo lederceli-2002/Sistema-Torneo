@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import EncabezadoPagina from "../Components/EncabezadoPagina";
 import Aviso from "../Components/Aviso";
 import Tabla from "../Components/Tabla";
@@ -42,6 +42,7 @@ function Torneos() {
     const [exito, setExito] = useState("");
     // Lee la URL: /torneos?editar=3  o  /torneos?nuevo
     const [parametros, setParametros] = useSearchParams();
+    const navegar = useNavigate();
 
     // Devuelve la lista para poder usarla justo después de cargarla
     async function cargarTorneos() {
@@ -157,6 +158,7 @@ function Torneos() {
             titulo: "Acciones",
             render: (t) => (
                 <div className="acciones">
+                    <button className="btn" onClick={() => navegar(`/torneos/${t.idTorneo}/configurar`)}>Configurar</button>
                     <button className="btn btn-secundario" onClick={() => abrirEditar(t)}>Editar</button>
                     <button className="btn btn-peligro" onClick={() => eliminar(t)}>Eliminar</button>
                 </div>

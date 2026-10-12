@@ -10,4 +10,7 @@ public interface ParticipacionEquipoTorneoRepository
 
     // ¿El equipo está inscrito en algún torneo?
     boolean existsByEquipo_IdEquipo(Integer idEquipo);
+
+    // ¿La serie tiene equipos inscritos?
+    boolean existsBySerie_IdSerie(Integer idSerie);
 }
