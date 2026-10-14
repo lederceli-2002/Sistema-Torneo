@@ -135,3 +135,109 @@
 .sidebar-menu button{
     font-size: 15px;
 }
+/* =========================
+   MENÚ CON ENLACES (NavLink)
+   ========================= */
+.sidebar-menu a {
+    color: white;
+    text-decoration: none;
+    padding: 14px 18px;
+    font-size: 15px;
+}
+.sidebar-menu a:hover {
+    background-color: #354b5e;
+}
+.sidebar-menu a.active {
+    background-color: #1677e8;
+}
+
+/* =========================
+   PÁGINAS DE MANTENIMIENTO
+   ========================= */
+.contenedor-pagina {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.aviso {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+.aviso-error { background-color: #fde2e1; color: #a1260d; }
+.aviso-exito { background-color: #d8f3df; color: #287a3e; }
+
+.formulario {
+    border: 1px solid #d9dee5;
+    border-radius: 7px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.formulario h2 { margin-top: 0; font-size: 20px; }
+
+.formulario-grilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+    color: #3c4650;
+}
+.campo input,
+.campo select,
+.buscador {
+    padding: 9px 10px;
+    border: 1px solid #c5ccd5;
+    border-radius: 5px;
+    font-size: 15px;
+}
+
+.formulario-botones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.btn {
+    border: none;
+    border-radius: 5px;
+    padding: 9px 16px;
+    background-color: #1677e8;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+.btn:hover { background-color: #0f63c4; }
+.btn-secundario { background-color: #e7ebf0; color: #263746; }
+.btn-secundario:hover { background-color: #d9dee5; }
+.btn-peligro { background-color: #d93025; }
+.btn-peligro:hover { background-color: #b3261e; }
+
+.buscador {
+    width: 100%;
+    max-width: 380px;
+    margin-bottom: 14px;
+}
+
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.tabla th,
+.tabla td {
+    border-bottom: 1px solid #e3e7ec;
+    padding: 10px 8px;
+    text-align: left;
+}
+.tabla th { background-color: #f4f6f8; color: #3c4650; }
+.acciones { display: flex; gap: 8px; }
+.tabla-vacia { text-align: center; color: #7a8591; padding: 24px; }

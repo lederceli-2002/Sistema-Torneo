@@ -14,5 +14,5 @@ public interface EquipoService {
 
     Equipo modificarEquipo(Equipo equipo);
 
-    boolean eliminarTorneo(int id);
+    boolean eliminarEquipo(int id);
 }

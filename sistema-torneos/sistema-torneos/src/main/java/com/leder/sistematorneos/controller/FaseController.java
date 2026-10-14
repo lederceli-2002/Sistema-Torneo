@@ -1,39 +1,45 @@
 package com.leder.sistematorneos.controller;
 
-import com.leder.sistematorneos.entity.Fase;
+import com.leder.sistematorneos.DTO.FaseDTO;
 import com.leder.sistematorneos.service.FaseService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/SistemFutbol/Fases")
+@RequestMapping("/api/fases")
 public class FaseController {
 
     private final FaseService faseService;
-    public FaseController(FaseService faseService){
-        this.faseService=faseService;
+
+    public FaseController(FaseService faseService) {
+        this.faseService = faseService;
+    }
+
+    // GET /api/fases?idTorneo=1
+    @GetMapping
+    public List<FaseDTO> listarPorTorneo(@RequestParam int idTorneo) {
+        return faseService.listarPorTorneo(idTorneo);
+    }
+
+    @GetMapping("/{id}")
+    public FaseDTO consultarFase(@PathVariable int id) {
+        return faseService.consultarFase(id);
     }
 
     @PostMapping
-    public Fase registrarFase(@RequestBody Fase fase){
+    public FaseDTO registrarFase(@Valid @RequestBody FaseDTO fase) {
         return faseService.registrarFase(fase);
     }
-    @GetMapping("/{id}")
-    public Fase consultarFase(@PathVariable int id){
-        return faseService.consultarFase(id);
-    }
-    @GetMapping
-    public List<Fase> listarFases(){
-        return faseService.listarFases();
-    }
+
     @PutMapping
-    public Fase actualizarFase(@RequestBody Fase fase){
+    public FaseDTO actualizarFase(@Valid @RequestBody FaseDTO fase) {
         return faseService.actualizarFase(fase);
     }
+
     @DeleteMapping("/{id}")
-    public boolean eiminarFase(@PathVariable int id){
+    public boolean eliminarFase(@PathVariable int id) {
         return faseService.eliminarFase(id);
     }
-
 }
