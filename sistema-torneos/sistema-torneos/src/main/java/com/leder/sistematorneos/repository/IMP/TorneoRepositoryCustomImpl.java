@@ -19,7 +19,8 @@ public class TorneoRepositoryCustomImpl implements TorneoRepositoryCustom {
     public List<TorneoDTO> tarjeterosTorneo() {
         String sql = "SELECT * FROM fn_listar_tarjeteros_torneos();";
 
-
+         /// --Dentro de jdbcTemplate vive el metodo "query" que nos regala spring
+        /// "rs" es la fila completa devuelta (pero solo 1 a la vez) el encargado de repetir es el "rowNum"(como un while)
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
 
             TorneoDTO dto = new TorneoDTO();

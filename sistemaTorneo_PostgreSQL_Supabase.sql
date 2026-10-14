@@ -1,10 +1,3 @@
--- ============================================================
--- sistemaTorneo - PostgreSQL / Supabase
--- Conversión desde SQL Server
--- ============================================================
-
--- En Supabase NO es necesario crear la base de datos.
--- Este script crea las tablas en el esquema public.
 
 SET search_path TO public;
 
