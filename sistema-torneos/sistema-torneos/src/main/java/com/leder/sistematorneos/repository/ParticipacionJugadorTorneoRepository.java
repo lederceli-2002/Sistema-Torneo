@@ -3,6 +3,8 @@ package com.leder.sistematorneos.repository;
 import com.leder.sistematorneos.entity.ParticipacionJugadorTorneo;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -18,8 +20,11 @@ public interface ParticipacionJugadorTorneoRepository
     List<ParticipacionJugadorTorneo> findByTorneo_IdTorneoOrderByEquipo_NombreAscNumeroCamisetaAsc(Integer idTorneo);
 
     @EntityGraph(attributePaths = {"equipo", "jugador"})
-    List<ParticipacionJugadorTorneo> findByEquipo_IdEquipo(Integer idEquipo);
-    
+    @Query("SELECT pjt FROM ParticipacionJugadorTorneo pjt " +
+            "WHERE pjt.equipo.idEquipo = :idEquipo " +
+            "OR pjt.idParticipacionJugadorTorneo = :idEquipo")
+    List<ParticipacionJugadorTorneo> findByEquipo_IdEquipo(@Param("idEquipo") Integer idEquipo);
+
     // Regla: un jugador no puede inscribirse dos veces en el mismo torneo
     boolean existsByTorneo_IdTorneoAndJugador_IdJugador(Integer idTorneo, Integer idJugador);
 

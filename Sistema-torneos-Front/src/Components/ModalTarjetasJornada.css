@@ -1,0 +1,126 @@
+.modal-tarjetas-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-tarjetas-container {
+  background: #ffffff;
+  width: 90%;
+  max-width: 650px;
+  max-height: 85vh;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.modal-tarjetas-header {
+  background: #1e293b;
+  color: #ffffff;
+  padding: 18px 24px;
+  position: relative;
+}
+
+.modal-tarjetas-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.modal-tarjetas-header p {
+  margin: 4px 0 0 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.modal-tarjetas-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.partido-tarjetas-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+  background: #f8fafc;
+}
+
+.partido-title {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.tarjeta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #cbd5e1;
+  font-size: 0.95rem;
+}
+
+.tarjeta-item:last-child {
+  border-bottom: none;
+}
+
+.minuto-text {
+  font-weight: bold;
+  color: #64748b;
+}
+
+.jugador-nombre {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.equipo-nombre {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.no-tarjetas-box {
+  text-align: center;
+  padding: 30px;
+  color: #166534;
+  background: #f0fdf4;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.modal-tarjetas-footer {
+  padding: 14px 24px;
+  background: #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-cerrar {
+  background: #475569;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}

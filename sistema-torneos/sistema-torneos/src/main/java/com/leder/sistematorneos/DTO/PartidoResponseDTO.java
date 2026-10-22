@@ -4,7 +4,10 @@ import java.time.LocalDate;
 
 public class PartidoResponseDTO {
 
+    private Integer idJornada;
     private Integer idPartido;
+
+
     private String local;
     private String visitante;
     private LocalDate fechaJuego;
@@ -13,7 +16,8 @@ public class PartidoResponseDTO {
     private Integer numeroJornada;
 
     // Constructor completo
-    public PartidoResponseDTO(Integer idPartido, String local, String visitante, LocalDate fechaJuego, String estado, String serie, Integer numeroJornada) {
+    public PartidoResponseDTO(Integer idJornada, Integer idPartido, String local, String visitante, LocalDate fechaJuego, String estado, String serie, Integer numeroJornada) {
+        this.idJornada = idJornada;
         this.idPartido = idPartido;
         this.local = local;
         this.visitante = visitante;
@@ -79,4 +83,12 @@ public class PartidoResponseDTO {
     public void setNumeroJornada(Integer numeroJornada) {
         this.numeroJornada = numeroJornada;
     }
+    public Integer getIdJornada() {
+        return idJornada;
+    }
+
+    public void setIdJornada(Integer idJornada) {
+        this.idJornada = idJornada;
+    }
+
 }

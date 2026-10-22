@@ -17,4 +17,15 @@ public interface RankingJornadaRepository extends JpaRepository<RankingJornada, 
     // Método 2: Consulta explícita JPQL para evitar ambigüedades en relaciones anidadas
     @Query("SELECT r FROM RankingJornada r WHERE r.jornada.idJornada = :idJornada ORDER BY r.puntos DESC, r.diferenciaGoles DESC")
     List<RankingJornada> obtenerRankingPorIdJornada(@Param("idJornada") Integer idJornada);
+
+    // Consulta JPQL directa sin ambigüedades de nombres de atributos
+    @Query("SELECT r FROM RankingJornada r " +
+            "WHERE r.jornada.serie.fase.torneo.idTorneo = :idTorneo " +
+            "AND LOWER(r.jornada.serie.nombre) LIKE LOWER(CONCAT('%', :nombreSerie, '%')) " +
+            "AND r.jornada.numero = :numeroJornada " +
+            "ORDER BY r.puntos DESC, r.diferenciaGoles DESC")
+    List<RankingJornada> obtenerRankingPorTorneoSerieYJornada(
+            @Param("idTorneo") Integer idTorneo,
+            @Param("nombreSerie") String nombreSerie,
+            @Param("numeroJornada") Integer numeroJornada);
 }

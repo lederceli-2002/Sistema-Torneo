@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './FixtureTorneo.css';
 import TablaPosicionesJornada from '../Components/TablaPosicionesJornada';
+import ModalTarjetasJornada from '../Components/ModalTarjetasJornada';
+
+
 
 const FixtureTorneo = () => {
   const { idTorneo } = useParams();
@@ -19,7 +22,9 @@ const FixtureTorneo = () => {
   const [jornadaSeleccionada, setJornadaSeleccionada] = useState(1);
   const [partidosLista, setPartidosLista] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mostrarModalTarjetas, setMostrarModalTarjetas] = useState(false);
 
+    
   // Estados para la Modal de Edición Rápida (Nombre y Fechas del Torneo)
   const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
   const [formEditarTorneo, setFormEditarTorneo] = useState({
@@ -47,15 +52,23 @@ const FixtureTorneo = () => {
         const resFixture = await axios.get(`http://localhost:8080/api/partidos/torneo/${idTorneo}`);
 
         if (resFixture.data && Array.isArray(resFixture.data) && resFixture.data.length > 0) {
-          const partidosNormalizados = resFixture.data.map((p) => ({
+          
+          const partidosNormalizados = resFixture.data.map((p) => {
+          // Extraer el idJornada del DTO o de la entidad
+          const idJornadaExtraido = p.idJornada || p.id_jornada || (typeof p.jornada === 'object' ? p.jornada?.idJornada : p.jornada);
+          const numJornadaExtraido = p.numeroJornada || p.numero_jornada || (typeof p.jornada === 'object' ? p.jornada?.numero : 1);
+
+          return {
             idPartido: p.idPartido || p.id_partido || p.id,
-            local: p.local || p.equipoLocal?.nombre || 'Equipo Local',
-            visitante: p.visitante || p.equipoVisitante?.nombre || 'Equipo Visitante',
+            local: p.local || p.equipoLocal?.nombre || p.equipoLocal?.equipo?.nombre || 'Equipo Local',
+            visitante: p.visitante || p.equipoVisitante?.nombre || p.equipoVisitante?.equipo?.nombre || 'Equipo Visitante',
             fechaHora: p.fechaJuego || p.fechaHora || 'Por programar',
             estado: p.estado || 'PENDIENTE',
             serie: p.serie?.nombre || p.nombreSerie || (typeof p.serie === 'string' ? p.serie : 'Serie A'),
-            numeroJornada: Number(p.jornada?.numero || p.numeroJornada || p.jornada || 1)
-          }));
+            numeroJornada: Number(numJornadaExtraido),
+            idJornada: idJornadaExtraido ? Number(idJornadaExtraido) : null
+          };
+        });
 
           setPartidosLista(partidosNormalizados);
         } else {
@@ -111,13 +124,12 @@ const handleGuardarConfiguracionTorneo = async (e) => {
 };
  
 
-  // Filtro dinámico en tiempo real
+  // Filtro dinámico en tiempo real para mostrar los partidos en pantalla
   const partidosFiltrados = partidosLista.filter((p) => {
-    const seriePartido = p.serie.toString().toLowerCase().trim();
-    const serieFiltro = serieSeleccionada.toString().toLowerCase().trim();
+    const seriePartido = p.serie ? p.serie.toString().toLowerCase().trim() : '';
+    const serieFiltro = serieSeleccionada ? serieSeleccionada.toString().toLowerCase().trim() : '';
 
-    const coincideSerie =
-      seriePartido === serieFiltro ||
+    const coincideSerie = seriePartido === serieFiltro ||
       seriePartido.includes(serieFiltro) ||
       serieFiltro.includes(seriePartido);
 
@@ -125,6 +137,19 @@ const handleGuardarConfiguracionTorneo = async (e) => {
 
     return coincideSerie && coincideJornada;
   });
+
+  // Buscar el partido que corresponda a la Jornada y Serie seleccionadas
+  const partidoCoincidente = partidosLista.find(p => 
+    Number(p.numeroJornada) === Number(jornadaSeleccionada) && 
+    (p.serie.toString().toLowerCase().includes(serieSeleccionada.toString().toLowerCase()) ||
+     serieSeleccionada.toString().toLowerCase().includes(p.serie.toString().toLowerCase()))
+  ) || partidosLista.find(p => Number(p.numeroJornada) === Number(jornadaSeleccionada)) || partidosLista[0];
+
+  // Extraer el idJornada real asignado por Supabase
+  const idJornadaReal = partidoCoincidente?.idJornada || null;
+
+  console.log("📌 SERIE Y JORNADA FILTRADA:", serieSeleccionada, "Jornada", jornadaSeleccionada, "➡️ ID REAL BD:", idJornadaReal);
+ 
 
   return (
     <div className="fixture-container">
@@ -146,6 +171,14 @@ const handleGuardarConfiguracionTorneo = async (e) => {
         >
           Configurar Torneo
         </button>
+
+        <button 
+        className="btn-tarjetas-jornada"
+        onClick={() => setMostrarModalTarjetas(true)}
+        style={{ background: '#3b82f6', color: '#fff', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+      >
+         Ver Tarjetas de la Jornada
+      </button>
       </div>
 
       {/* Panel de Filtros */}
@@ -197,18 +230,26 @@ const handleGuardarConfiguracionTorneo = async (e) => {
                   >
                     {partido.estado}
                   </span>
-                  <button
-                    onClick={() => {
-                      const idValido = partido.idPartido || partido.id_partido || partido.id;
-                      if (idValido) {
-                        navigate(`/partidos/registrar/${idValido}`);
-                      }
-                    }}
-                    className="btn-configurar"
-                    style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: '#2563eb' }}
-                  >
-                    Registrar Partido
-                  </button>
+                    <button
+                      onClick={() => {
+                        const idValido = partido.idPartido || partido.id_partido || partido.id;
+                        if (idValido) {
+                          navigate(`/partidos/registrar/${idValido}`);
+                        }
+                      }}
+                      className="btn-configurar"
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        backgroundColor:
+                          partido.estado?.toUpperCase() === 'FINALIZADO' ? '#475569' : '#2563eb'
+                      }}
+                    >
+                      {partido.estado?.toUpperCase() === 'FINALIZADO'
+                        ? 'Ver Resultado'
+                        : 'Registrar Partido'}
+                    </button>
+                    
                 </div>
               </div>
             </div>
@@ -219,9 +260,20 @@ const handleGuardarConfiguracionTorneo = async (e) => {
           No hay partidos programados para la <strong>{serieSeleccionada}</strong> en la <strong>Jornada {jornadaSeleccionada}</strong>.
         </div>
       )}
-      <TablaPosicionesJornada 
-        key={`ranking-jornada-${jornadaSeleccionada}`}
-        idJornada={jornadaSeleccionada} />
+      
+      <TablaPosicionesJornada
+        key={`ranking-${idJornadaReal || jornadaSeleccionada}`}
+        idJornada={idJornadaReal}
+      />
+
+    {/* MODAL DE TARJETAS DE LA JORNADA */}
+      <ModalTarjetasJornada
+          isOpen={mostrarModalTarjetas}
+          onClose={() => setMostrarModalTarjetas(false)}
+          idJornada={idJornadaReal || jornadaSeleccionada}
+          serieNombre={serieSeleccionada}
+          numeroJornada={jornadaSeleccionada}
+      />
 
       {/* MODAL DE EDICIÓN RÁPIDA DE TORNEO (Nombre y Fechas) */}
       {mostrarModalEditar && (

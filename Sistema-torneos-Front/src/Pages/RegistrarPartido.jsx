@@ -34,31 +34,45 @@ const RegistrarPartido = () => {
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
- useEffect(() => {
+ 
+  useEffect(() => {
   const obtenerDatosPartido = async () => {
     setLoading(true);
     try {
       const res = await axios.get(`http://localhost:8080/api/partidos/${idPartido}`);
       if (res.data) {
         setPartidoInfo(res.data);
-        setGolesLocal(res.data.golesLocal || 0);
-        setGolesVisitante(res.data.golesVisitante || 0);
 
-        // Extraer los IDs considerando la estructura JSON del backend
-        const idEquipoLocal = res.data.equipoLocal?.equipo?.idEquipo || res.data.equipoLocal?.idParticipacionEquipoTorneo;
-        const idEquipoVisitante = res.data.equipoVisitante?.equipo?.idEquipo || res.data.equipoVisitante?.idParticipacionEquipoTorneo;
+        // Cargar marcadores de goles reales
+        if (res.data.golesLocal !== undefined) setGolesLocal(res.data.golesLocal);
+        if (res.data.golesVisitante !== undefined) setGolesVisitante(res.data.golesVisitante);
 
-        // Cargar plantilla local
+        // Cargar tarjetas registradas previamente en la base de datos
+        if (res.data.tarjetas && Array.isArray(res.data.tarjetas)) {
+          const tarjetasMapeadas = res.data.tarjetas.map(t => ({
+            id: t.idTarjeta || Date.now() + Math.random(),
+            equipo: t.equipo || 'LOCAL',
+            tipo: t.tipo === 'Amarilla' ? 'AMARILLA' : 'ROJA',
+            jugador: t.jugador || 'Jugador',
+            idJugador: t.idJugador,
+            minuto: t.minuto
+          }));
+          setEventosList(tarjetasMapeadas);
+        }
+
+        // Extraer IDs de participación/equipo
+        const idEquipoLocal = res.data.equipoLocal?.equipo?.idEquipo || res.data.equipoLocal?.idParticipacionEquipoTorneo || res.data.idEquipoLocal;
+        const idEquipoVisitante = res.data.equipoVisitante?.equipo?.idEquipo || res.data.equipoVisitante?.idParticipacionEquipoTorneo || res.data.idEquipoVisitante;
+
+        // Cargar plantilla de jugadores local
         if (idEquipoLocal) {
           const resLocal = await axios.get(`http://localhost:8080/api/jugadores/equipo/${idEquipoLocal}`);
-          console.log("Jugadores Local recibidos:", resLocal.data);
           setJugadoresLocal(resLocal.data || []);
         }
 
-        // Cargar plantilla visitante
+        // Cargar plantilla de jugadores visitante
         if (idEquipoVisitante) {
           const resVisitante = await axios.get(`http://localhost:8080/api/jugadores/equipo/${idEquipoVisitante}`);
-          console.log("Jugadores Visitante recibidos:", resVisitante.data);
           setJugadoresVisitante(resVisitante.data || []);
         }
       }
@@ -73,6 +87,7 @@ const RegistrarPartido = () => {
     obtenerDatosPartido();
   }
 }, [idPartido]);
+  
 
   // Cerrar el desplegable si se hace clic fuera del buscador
   useEffect(() => {
@@ -88,38 +103,47 @@ const RegistrarPartido = () => {
   // Lista activa de jugadores según el equipo seleccionado
   const listaJugadoresActual = nuevoEvento.equipo === 'LOCAL' ? jugadoresLocal : jugadoresVisitante;
 
- // Filtrado progresivo en tiempo real conforme el usuario escribe
+// Filtrado progresivo en tiempo real conforme el usuario escribe
 const jugadoresFiltrados = listaJugadoresActual.filter((j) => {
-  const busqueda = nuevoEvento.jugador.toLowerCase().trim();
-  if (!busqueda) return true;
+    const busqueda = (nuevoEvento.jugador || '').toLowerCase().trim();
+    if (!busqueda) return true;
 
-  // Extraer valores tolerando tanto 'nombre'/'apellido' como 'nombres'/'apellidos'
-  const nombre = (j.nombre || j.nombres || '').toLowerCase();
-  const apellido = (j.apellido || j.apellidos || '').toLowerCase();
-  const nombreCompleto = `${nombre} ${apellido}`.trim();
-  const dni = (j.dni || '').toString();
-  const camiseta = (j.numeroCamiseta || j.numero_camiseta || j.numeroDorsal || '').toString();
+    // Extraer la entidad interna si viene anidada en 'jugador'
+    const datosJugador = j.jugador || j;
 
-  return (
-    nombreCompleto.includes(busqueda) ||
-    nombre.includes(busqueda) ||
-    apellido.includes(busqueda) ||
-    dni.includes(busqueda) ||
-    camiseta.includes(busqueda)
-  );
+    // Extraer valores del objeto jugador
+    const nombre = (datosJugador.nombre || datosJugador.nombres || '').toLowerCase();
+    const apellido = (datosJugador.apellido || datosJugador.apellidos || '').toLowerCase();
+    const nombreCompleto = `${nombre} ${apellido}`.trim();
+    const dni = (datosJugador.dni || '').toString();
+    const camiseta = (j.numeroCamiseta || j.numero_camiseta || j.numeroDorsal || '').toString();
+
+    return (
+        nombreCompleto.includes(busqueda) ||
+        nombre.includes(busqueda) ||
+        apellido.includes(busqueda) ||
+        dni.includes(busqueda) ||
+        camiseta.includes(busqueda)
+    );
 });
 
 const handleSeleccionarJugador = (jugadorObj) => {
-  const nombre = jugadorObj.nombre || jugadorObj.nombres || '';
-  const apellido = jugadorObj.apellido || jugadorObj.apellidos || '';
-  const nombreMostrar = `${nombre} ${apellido}`.trim() || 'Jugador seleccionado';
-  
-  setNuevoEvento({
-    ...nuevoEvento,
-    jugador: nombreMostrar,
-    idJugador: jugadorObj.idJugador || jugadorObj.id_jugador || jugadorObj.id
-  });
-  setMostrarDropdown(false);
+    // Si viene anidado (ParticipacionJugadorTorneo) usamos jugadorObj.jugador, si no, el mismo objeto
+    const datosJugador = jugadorObj.jugador || jugadorObj;
+
+    const nombre = datosJugador.nombre || datosJugador.nombres || '';
+    const apellido = datosJugador.apellido || datosJugador.apellidos || '';
+    const nombreMostrar = `${nombre} ${apellido}`.trim() || 'Jugador seleccionado';
+
+    // Priorizamos idParticipacionJugadorTorneo o idJugador
+    const idAEnviar = jugadorObj.idParticipacionJugadorTorneo || datosJugador.idJugador || datosJugador.id_jugador || datosJugador.id;
+
+    setNuevoEvento({
+        ...nuevoEvento,
+        jugador: nombreMostrar,
+        idJugador: idAEnviar
+    });
+    setMostrarDropdown(false);
 };
 
   // 3. Agregar evento a la lista
@@ -183,8 +207,8 @@ const handleGuardarPartido = async () => {
     return <div className="registrar-partido-container">Cargando datos del encuentro...</div>;
   }
 
-  const nombreLocal = partidoInfo?.local || partidoInfo?.equipoLocal?.nombre || 'Equipo Local';
-  const nombreVisitante = partidoInfo?.visitante || partidoInfo?.equipoVisitante?.nombre || 'Equipo Visitante';
+  const nombreLocal = partidoInfo?.local || partidoInfo?.equipoLocal?.equipo?.nombre || partidoInfo?.equipoLocal?.nombre || 'Equipo Local';
+const nombreVisitante = partidoInfo?.visitante || partidoInfo?.equipoVisitante?.equipo?.nombre || partidoInfo?.equipoVisitante?.nombre || 'Equipo Visitante';
 
   return (
     <div className="registrar-partido-container">
@@ -285,18 +309,26 @@ const handleGuardarPartido = async () => {
             {mostrarDropdown && (
               <ul className="dropdown-jugadores">
                 {jugadoresFiltrados.length > 0 ? (
-                  jugadoresFiltrados.map((j) => (
-                    <li
-                      key={j.idJugador || j.id || j.dni}
-                      onClick={() => handleSeleccionarJugador(j)}
-                    >
-                      <span className="jugador-nombre">{j.nombres} {j.apellidos}</span>
-                      {j.dni && <span className="jugador-dni">DNI: {j.dni}</span>}
-                    </li>
-                  ))
-                ) : (
+    jugadoresFiltrados.map((j) => {
+        const datosJugador = j.jugador || j;
+        const idKey = j.idParticipacionJugadorTorneo || datosJugador.idJugador || datosJugador.id || datosJugador.dni;
+
+        return (
+            <li
+                key={idKey}
+                onClick={() => handleSeleccionarJugador(j)}
+            >
+                <span className="jugador-nombre">
+                    {datosJugador.nombres} {datosJugador.apellidos}
+                </span>
+                {datosJugador.dni && <span className="jugador-dni">DNI: {datosJugador.dni}</span>}
+                {j.numeroCamiseta && <span className="jugador-dorsal"> (#{j.numeroCamiseta})</span>}
+            </li>
+                  );
+                  })
+              ) : (
                   <li className="no-results">No se encontraron jugadores</li>
-                )}
+              )}
               </ul>
             )}
           </div>

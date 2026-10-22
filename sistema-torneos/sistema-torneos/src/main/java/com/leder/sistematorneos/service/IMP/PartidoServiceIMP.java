@@ -107,18 +107,30 @@ public class PartidoServiceIMP implements PartidoService {
         }
     }
 
+    @Override
     public void recalcularRankingJornada(Integer idJornada) {
-        if (idJornada == null) return;
+        if (idJornada == null) {
+            System.out.println("❌ recalcularRankingJornada: idJornada es nulo");
+            return;
+        }
 
-        // 1. Obtener todos los partidos de la jornada
+        // 1. Obtener los partidos de la jornada
         List<Partido> partidosJornada = partidoRepository.findByJornada_IdJornada(idJornada);
 
-        // 2. Filtrar los partidos que estén FINALIZADOS
+        if (partidosJornada == null || partidosJornada.isEmpty()) {
+            System.out.println("⚠️ No se encontraron partidos para idJornada = " + idJornada);
+            return;
+        }
+
+        // 2. Filtrar los partidos que estén FINALIZADOS (ignorando mayúsculas/minúsculas y espacios)
         List<Partido> partidosFinalizados = partidosJornada.stream()
-                .filter(p -> p.getEstado() != null && p.getEstado().equalsIgnoreCase("FINALIZADO"))
+                .filter(p -> p.getEstado() != null && p.getEstado().trim().equalsIgnoreCase("FINALIZADO"))
                 .collect(Collectors.toList());
 
-        if (partidosFinalizados.isEmpty()) return;
+        if (partidosFinalizados.isEmpty()) {
+            System.out.println("⚠️ No hay partidos finalizados en la jornada = " + idJornada);
+            return;
+        }
 
         Map<Integer, RankingJornada> rankingMap = new HashMap<>();
 
@@ -128,29 +140,27 @@ public class PartidoServiceIMP implements PartidoService {
 
             if (local == null || visitante == null) continue;
 
-            // 3. Consultar los goles del partido
+            // Consultar los goles del encuentro
             List<Gol> golesPartido = golRepository.findByPartido_IdPartido(partido.getIdPartido());
 
             int golesLocal = 0;
             int golesVisitante = 0;
 
-            for (Gol g : golesPartido) {
-                // Evaluamos la relación exacta: Gol -> ParticipacionJugadorTorneo -> Equipo
-                if (g.getParticipacionJugadorTorneo() != null &&
-                        g.getParticipacionJugadorTorneo().getEquipo() != null) {
+            if (golesPartido != null) {
+                for (Gol g : golesPartido) {
+                    if (g.getParticipacionJugadorTorneo() != null && g.getParticipacionJugadorTorneo().getEquipo() != null) {
+                        Integer idEquipoAnotador = g.getParticipacionJugadorTorneo().getEquipo().getIdEquipo();
 
-                    Integer idEquipoAnotador = g.getParticipacionJugadorTorneo().getEquipo().getIdEquipo();
-
-                    // Comparación segura con el idEquipo del equipo Local y Visitante
-                    if (local.getEquipo() != null && idEquipoAnotador.equals(local.getEquipo().getIdEquipo())) {
-                        golesLocal++;
-                    } else if (visitante.getEquipo() != null && idEquipoAnotador.equals(visitante.getEquipo().getIdEquipo())) {
-                        golesVisitante++;
+                        if (local.getEquipo() != null && idEquipoAnotador.equals(local.getEquipo().getIdEquipo())) {
+                            golesLocal++;
+                        } else if (visitante.getEquipo() != null && idEquipoAnotador.equals(visitante.getEquipo().getIdEquipo())) {
+                            golesVisitante++;
+                        }
                     }
                 }
             }
 
-            // 4. Recuperar o inicializar acumulados para Local y Visitante
+            // Crear/obtener acumulado Local
             RankingJornada rLocal = rankingMap.computeIfAbsent(local.getIdParticipacionEquipoTorneo(), id -> {
                 RankingJornada r = new RankingJornada();
                 r.setJornada(partido.getJornada());
@@ -161,6 +171,7 @@ public class PartidoServiceIMP implements PartidoService {
                 return r;
             });
 
+            // Crear/obtener acumulado Visitante
             RankingJornada rVisitante = rankingMap.computeIfAbsent(visitante.getIdParticipacionEquipoTorneo(), id -> {
                 RankingJornada r = new RankingJornada();
                 r.setJornada(partido.getJornada());
@@ -171,7 +182,7 @@ public class PartidoServiceIMP implements PartidoService {
                 return r;
             });
 
-            // Sumar Partidos Jugados y Goles
+            // Sumar PJ y Goles
             rLocal.setPartidosJugados(rLocal.getPartidosJugados() + 1);
             rVisitante.setPartidosJugados(rVisitante.getPartidosJugados() + 1);
 
@@ -181,7 +192,7 @@ public class PartidoServiceIMP implements PartidoService {
             rVisitante.setGolesFavor(rVisitante.getGolesFavor() + golesVisitante);
             rVisitante.setGolesContra(rVisitante.getGolesContra() + golesLocal);
 
-            // Asignar Puntos y Resultados
+            // Puntos y resultados
             if (golesLocal > golesVisitante) {
                 rLocal.setGanados(rLocal.getGanados() + 1);
                 rLocal.setPuntos(rLocal.getPuntos() + 3);
@@ -201,7 +212,7 @@ public class PartidoServiceIMP implements PartidoService {
             rVisitante.setDiferenciaGoles(rVisitante.getGolesFavor() - rVisitante.getGolesContra());
         }
 
-        // 5. Ordenar por Puntos y Diferencia de Goles y asignar posiciones
+        // Ordenar y asignar Posición
         List<RankingJornada> listaRanking = new ArrayList<>(rankingMap.values());
         listaRanking.sort((a, b) -> {
             int cmp = b.getPuntos().compareTo(a.getPuntos());
@@ -213,12 +224,13 @@ public class PartidoServiceIMP implements PartidoService {
             listaRanking.get(i).setPosicion(i + 1);
         }
 
-        // 6. Limpiar ranking previo y guardar los calculados
+        // Reemplazar anteriores por la nueva lista
         List<RankingJornada> anteriores = rankingJornadaRepository.findByJornada_IdJornadaOrderByPuntosDescDiferenciaGolesDesc(idJornada);
-        if (!anteriores.isEmpty()) {
+        if (anteriores != null && !anteriores.isEmpty()) {
             rankingJornadaRepository.deleteAll(anteriores);
         }
 
         rankingJornadaRepository.saveAll(listaRanking);
+        System.out.println("✅ Ranking guardado con éxito para idJornada = " + idJornada + " (" + listaRanking.size() + " registros)");
     }
 }

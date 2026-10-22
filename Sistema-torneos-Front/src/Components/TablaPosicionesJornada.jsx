@@ -1,92 +1,94 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import './TablaPosicionesJornada.css'; // Asegúrate de tener los estilos vinculados
+import './TablaPosicionesJornada.css';
 
 const TablaPosicionesJornada = ({ idJornada }) => {
   const [ranking, setRanking] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const obtenerRanking = async () => {
-      if (!idJornada) return;
-      setLoading(true);
-      try {
-        const res = await axios.get(`http://localhost:8080/api/ranking/jornada/${idJornada}`);
-        console.log("Datos del Ranking recibidos del Backend:", res.data);
-        setRanking(res.data || []);
-      } catch (error) {
-        console.error("Error al obtener la tabla de posiciones:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!idJornada) {
+      setRanking([]);
+      setLoading(false);
+      return;
+    }
 
-    obtenerRanking();
+    setLoading(true);
+    axios
+      .get(`http://localhost:8080/api/ranking/jornada/${idJornada}`)
+      .then((res) => {
+        setRanking(res.data || []);
+      })
+      .catch((err) => {
+        console.error('Error al obtener el ranking de la jornada:', err);
+        setRanking([]);
+      })
+      .finally(() => setLoading(false));
   }, [idJornada]);
 
   if (loading) {
-    return <div className="text-center my-3 text-muted">Cargando tabla de posiciones...</div>;
+    return (
+      <div className="tabla-ranking-container">
+        <p>Cargando tabla de posiciones...</p>
+      </div>
+    );
+  }
+
+  if (!ranking || ranking.length === 0) {
+    return (
+      <div className="tabla-ranking-container">
+        <p>No hay datos de ranking calculados para esta jornada.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="card shadow-sm mt-4">
-      <div className="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-        <span> Tabla de Posiciones - Jornada</span>
-      </div>
-      <div className="card-body p-0">
-        <div className="table-responsive">
-          <table className="table table-striped table-hover mb-0 text-center align-middle">
-            <thead className="table-dark">
-              <tr>
-                <th>Pos</th>
-                <th className="text-start">Equipo</th>
-                <th>PJ</th>
-                <th>PG</th>
-                <th>PE</th>
-                <th>PP</th>
-                <th>GF</th>
-                <th>GC</th>
-                <th>DG</th>
-                <th>PTS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ranking && ranking.length > 0 ? (
-                ranking.map((item, index) => {
-                  // Mapeo seguro del nombre del equipo
-                  const nombreEquipo =
-                    item.participacionEquipoTorneo?.equipo?.nombre ||
-                    item.nombreEquipo ||
-                    `Equipo ${index + 1}`;
+    <div className="tabla-ranking-container">
+      <h3>Tabla de Posiciones</h3>
+      <table className="ranking-table">
+        <thead>
+          <tr>
+            <th>Pos</th>
+            <th className="col-equipo">Equipo</th>
+            <th>PJ</th>
+            <th>PG</th>
+            <th>PE</th>
+            <th>PP</th>
+            <th>GF</th>
+            <th>GC</th>
+            <th>DG</th>
+            <th>PTS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ranking.map((fila, index) => {
+            // Mapeo seguro para leer tanto las propiedades del backend DTO como abreviaciones
+            const pj = fila.partidosJugados ?? fila.pj ?? 0;
+            const pg = fila.ganados ?? fila.pg ?? 0;
+            const pe = fila.empatados ?? fila.pe ?? 0;
+            const pp = fila.perdidos ?? fila.pp ?? 0;
+            const gf = fila.golesFavor ?? fila.gf ?? 0;
+            const gc = fila.golesContra ?? fila.gc ?? 0;
+            const dg = fila.diferenciaGoles ?? fila.dg ?? 0;
+            const pts = fila.puntos ?? fila.pts ?? 0;
 
-                  return (
-                    <tr key={item.idRankingJornada || index}>
-                      <td className="fw-bold">{item.posicion || index + 1}</td>
-                      <td className="text-start fw-bold text-primary">{nombreEquipo}</td>
-                      <td>{item.partidosJugados ?? 0}</td>
-                      <td>{item.ganados ?? 0}</td>
-                      <td>{item.empatados ?? 0}</td>
-                      <td>{item.perdidos ?? 0}</td>
-                      <td>{item.golesFavor ?? 0}</td>
-                      <td>{item.golesContra ?? 0}</td>
-                      <td className={`fw-bold ${(item.diferenciaGoles || 0) > 0 ? 'text-success' : (item.diferenciaGoles || 0) < 0 ? 'text-danger' : ''}`}>
-                        {(item.diferenciaGoles || 0) > 0 ? `+${item.diferenciaGoles}` : (item.diferenciaGoles ?? 0)}
-                      </td>
-                      <td className="fw-bold bg-light text-primary fs-6">{item.puntos ?? 0}</td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="10" className="text-muted py-3">
-                    No hay partidos registrados ni posiciones calculadas para esta jornada.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            return (
+              <tr key={fila.idRankingJornada || index}>
+                <td className="col-posicion">{fila.posicion || index + 1}</td>
+                <td className="col-equipo">{fila.equipo || 'Equipo'}</td>
+                <td>{pj}</td>
+                <td>{pg}</td>
+                <td>{pe}</td>
+                <td>{pp}</td>
+                <td>{gf}</td>
+                <td>{gc}</td>
+                <td>{dg}</td>
+                <td className="col-puntos">{pts}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };
