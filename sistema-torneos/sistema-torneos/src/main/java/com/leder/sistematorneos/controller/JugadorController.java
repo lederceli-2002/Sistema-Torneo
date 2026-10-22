@@ -1,6 +1,7 @@
 package com.leder.sistematorneos.controller;
 
 import com.leder.sistematorneos.entity.Jugador;
+import com.leder.sistematorneos.entity.ParticipacionJugadorTorneo;
 import com.leder.sistematorneos.service.JugadorService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,10 @@ public class JugadorController {
 
     public JugadorController(JugadorService jugadorService){
         this.jugadorService=jugadorService;
+    }
+    @GetMapping("/equipo/{idEquipo}")
+    public List<ParticipacionJugadorTorneo> listarJugadoresPorEquipo(@PathVariable int idEquipo) {
+        return jugadorService.listarJugadoresPorEquipo(idEquipo);
     }
 
     @PostMapping

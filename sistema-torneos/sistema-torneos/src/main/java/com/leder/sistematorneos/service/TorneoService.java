@@ -1,5 +1,6 @@
 package com.leder.sistematorneos.service;
 
+import com.leder.sistematorneos.DTO.TorneoCreacionDTO;
 import com.leder.sistematorneos.DTO.TorneoDTO;
 import com.leder.sistematorneos.entity.Torneo;
 
@@ -18,4 +19,6 @@ public interface TorneoService {
      Torneo modificarTorneo(Torneo torneo);
 
      boolean eliminarTorneo(int id);
+
+    Torneo guardarTorneoConFixture(TorneoCreacionDTO dto);
 }

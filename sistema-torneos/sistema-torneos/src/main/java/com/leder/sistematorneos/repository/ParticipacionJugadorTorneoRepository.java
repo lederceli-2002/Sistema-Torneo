@@ -17,6 +17,9 @@ public interface ParticipacionJugadorTorneoRepository
     @EntityGraph(attributePaths = {"equipo", "jugador"})
     List<ParticipacionJugadorTorneo> findByTorneo_IdTorneoOrderByEquipo_NombreAscNumeroCamisetaAsc(Integer idTorneo);
 
+    @EntityGraph(attributePaths = {"equipo", "jugador"})
+    List<ParticipacionJugadorTorneo> findByEquipo_IdEquipo(Integer idEquipo);
+    
     // Regla: un jugador no puede inscribirse dos veces en el mismo torneo
     boolean existsByTorneo_IdTorneoAndJugador_IdJugador(Integer idTorneo, Integer idJugador);
 

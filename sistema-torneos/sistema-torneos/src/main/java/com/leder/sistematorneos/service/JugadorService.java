@@ -1,6 +1,7 @@
 package com.leder.sistematorneos.service;
 
 import com.leder.sistematorneos.entity.Jugador;
+import com.leder.sistematorneos.entity.ParticipacionJugadorTorneo;
 
 import java.util.List;
 
@@ -15,4 +16,6 @@ public interface JugadorService {
     Jugador modificarJugador(Jugador jugador);
 
     boolean eliminarJugador(int id);
+
+    List<ParticipacionJugadorTorneo> listarJugadoresPorEquipo(int idEquipo);
 }

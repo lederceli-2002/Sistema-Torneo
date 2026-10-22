@@ -1,8 +1,10 @@
 package com.leder.sistematorneos.service.IMP;
 
 import com.leder.sistematorneos.entity.Jugador;
+import com.leder.sistematorneos.entity.ParticipacionJugadorTorneo;
 import com.leder.sistematorneos.exception.RecursoNoEncontradoException;
 import com.leder.sistematorneos.repository.JugadorRepository;
+import com.leder.sistematorneos.repository.ParticipacionJugadorTorneoRepository;
 import com.leder.sistematorneos.service.JugadorService;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +14,17 @@ import java.util.List;
 public class JugadorServiceIMP implements JugadorService {
 
     private final JugadorRepository jugadorRepository;
-    public JugadorServiceIMP(JugadorRepository jugadorRepository){
+    private final ParticipacionJugadorTorneoRepository participacionJugadorTorneoRepository; // <-- INYECTAR
+
+    public JugadorServiceIMP(JugadorRepository jugadorRepository,
+                             ParticipacionJugadorTorneoRepository participacionJugadorTorneoRepository) {
         this.jugadorRepository = jugadorRepository;
+        this.participacionJugadorTorneoRepository = participacionJugadorTorneoRepository;
+    }
+
+    @Override
+    public List<ParticipacionJugadorTorneo> listarJugadoresPorEquipo(int idEquipo) {
+        return participacionJugadorTorneoRepository.findByEquipo_IdEquipo(idEquipo);
     }
 
     @Override
