@@ -17,12 +17,12 @@ public class FaseController {
         this.faseService = faseService;
     }
 
-    // GET /api/fases?idTorneo=1
+    // GET /api/fases?idTorneo=1  te lista todas las fases que con el id del torneo seleccionado
     @GetMapping
     public List<FaseDTO> listarPorTorneo(@RequestParam int idTorneo) {
         return faseService.listarPorTorneo(idTorneo);
     }
-
+    //te consulta la fase por su ID
     @GetMapping("/{id}")
     public FaseDTO consultarFase(@PathVariable int id) {
         return faseService.consultarFase(id);

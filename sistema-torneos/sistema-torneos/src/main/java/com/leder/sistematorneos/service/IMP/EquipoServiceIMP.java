@@ -1,19 +1,36 @@
 package com.leder.sistematorneos.service.IMP;
 
+import com.leder.sistematorneos.DTO.EquipoConPlantillaDTO;
 import com.leder.sistematorneos.entity.Equipo;
+import com.leder.sistematorneos.entity.EquipoJugador;
+import com.leder.sistematorneos.entity.Jugador;
 import com.leder.sistematorneos.exception.RecursoNoEncontradoException;
 import com.leder.sistematorneos.exception.ReglaDeNegocioException;
+import com.leder.sistematorneos.repository.EquipoJugadorRepository;
 import com.leder.sistematorneos.repository.EquipoRepository;
+import com.leder.sistematorneos.repository.JugadorRepository;
 import com.leder.sistematorneos.repository.ParticipacionEquipoTorneoRepository;
 import com.leder.sistematorneos.service.EquipoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class EquipoServiceIMP implements EquipoService {
 
-    private final EquipoRepository equipoRepository;
+
+    @Autowired
+    private EquipoRepository equipoRepository;
+
+    @Autowired
+    private EquipoJugadorRepository equipoJugadorRepository;
+
+    @Autowired
+    private JugadorRepository jugadorRepository;
+
+
     private final ParticipacionEquipoTorneoRepository participacionEquipoTorneoRepository;
 
     // INYECCION POR CONSTRUCTOR
@@ -65,4 +82,35 @@ public class EquipoServiceIMP implements EquipoService {
         equipoRepository.deleteById(id);
         return true;
     }
+
+    @Override
+    @Transactional
+    public Equipo registrarEquipoPlantilla(EquipoConPlantillaDTO dto) {
+        // 1. Guardar la entidad maestra Equipo
+        Equipo equipo = new Equipo();
+        equipo.setNombre(dto.getNombre());
+        equipo.setDescripcion(dto.getDescripcion());
+        equipo.setCiudad(dto.getCiudad());
+        equipo.setEscudo(dto.getEscudo());
+        equipo.setEstado(dto.getEstado()); // Devolverá "ACTIVO" por defecto
+
+        Equipo equipoGuardado = equipoRepository.save(equipo);
+
+        // 2. Asociar los jugadores a la plantilla base atemporal (equipo_jugador)
+        if (dto.getIdsJugadores() != null && !dto.getIdsJugadores().isEmpty()) {
+            for (Integer idJugador : dto.getIdsJugadores()) {
+                Jugador jugador = jugadorRepository.findById(idJugador)
+                        .orElseThrow(() -> new RecursoNoEncontradoException("Jugador no encontrado con ID: " + idJugador));
+
+                if (!equipoJugadorRepository.existsByEquipo_IdEquipoAndJugador_IdJugador(equipoGuardado.getIdEquipo(), idJugador)) {
+                    EquipoJugador plantilla = new EquipoJugador(equipoGuardado, jugador);
+                    equipoJugadorRepository.save(plantilla);
+                }
+            }
+        }
+
+        return equipoGuardado;
+    }
+
+
 }

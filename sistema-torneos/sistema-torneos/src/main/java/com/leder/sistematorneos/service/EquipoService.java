@@ -1,5 +1,6 @@
 package com.leder.sistematorneos.service;
 
+import com.leder.sistematorneos.DTO.EquipoConPlantillaDTO;
 import com.leder.sistematorneos.entity.Equipo;
 
 import java.util.List;
@@ -15,4 +16,6 @@ public interface EquipoService {
     Equipo modificarEquipo(Equipo equipo);
 
     boolean eliminarEquipo(int id);
+
+    Equipo registrarEquipoPlantilla(EquipoConPlantillaDTO dto);
 }

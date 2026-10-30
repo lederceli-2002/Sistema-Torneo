@@ -4,12 +4,14 @@ import Aviso from "../Components/Aviso";
 import Tabla from "../Components/Tabla";
 import Modal from "../Components/Modal";
 import EtiquetaEstado from "../Components/EtiquetaEstado";
+import { useNavigate } from "react-router-dom";
 import {
     listarEquipos,
     registrarEquipo,
     actualizarEquipo,
     eliminarEquipo,
 } from "../Services/equipoService.js";
+
 
 // Formulario vacío (idEquipo null = registrar, con id = editar)
 const equipoVacio = {
@@ -42,7 +44,7 @@ function Equipos() {
     const [error, setError] = useState("");
     const [errorFormulario, setErrorFormulario] = useState("");
     const [exito, setExito] = useState("");
-
+    const navigate = useNavigate();
     async function cargarEquipos() {
         try {
             setEquipos(await listarEquipos());
@@ -56,12 +58,7 @@ function Equipos() {
         cargarEquipos();
     }, []);
 
-    // ---------- Abrir y cerrar el modal ----------
-    function abrirNuevo() {
-        setFormulario(equipoVacio);
-        setErrorFormulario("");
-        setModalAbierto(true);
-    }
+   
 
     function abrirEditar(equipo) {
         setFormulario({
@@ -151,7 +148,7 @@ function Equipos() {
     return (
         <div className="contenedor-pagina">
             <EncabezadoPagina titulo="Equipos" descripcion="Registro y mantenimiento de los equipos.">
-                <button className="btn" onClick={abrirNuevo}>+ Nuevo equipo</button>
+                <button className="btn" onClick={() => navigate('/equipos/crear')}>+ Nuevo equipo</button>
             </EncabezadoPagina>
 
             <Aviso tipo="error" mensaje={error} onCerrar={() => setError("")} />

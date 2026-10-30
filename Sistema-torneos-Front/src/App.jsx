@@ -8,6 +8,7 @@ import ConfigurarTorneo from "./Pages/ConfigurarTorneo";
 import CrearTorneo from "./Pages/crearTorneo";
 import FixtureTorneo from "./Pages/FixtureTorneo";
 import RegistrarPartido from './Pages/RegistrarPartido';
+import CrearEquipo from "./Pages/CrearEquipos";
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
         <Route path="/" element={<ListaTorneos />} />
         <Route path="/equipos" element={<Equipos />} />
         <Route path="/jugadores" element={<Jugadores />} />
-
+        <Route path="/equipos/crear" element={<CrearEquipo />} /> {/*Registro de equipos */}
         {/* Flujo desde las tarjetas del Inicio */}
         <Route path="/torneos/crear" element={<CrearTorneo />} />
         <Route path="/torneos/:idTorneo/configurar" element={<ConfigurarTorneo />} />
