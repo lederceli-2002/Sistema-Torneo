@@ -14,11 +14,15 @@ import com.leder.sistematorneos.service.TorneoService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class TorneoServiceIMP implements TorneoService {
 
+    private final JornadaRepository jornadaRepository;
+    private final PartidoRepository partidoRepository;
     private final TorneoRepository torneoRepository;
     private final FaseRepository faseRepository;
     private final SerieRepository serieRepository;
@@ -27,13 +31,15 @@ public class TorneoServiceIMP implements TorneoService {
     private final ParticipacionEquipoTorneoRepository participacionEquipoTorneoRepository;
     private final ParticipacionJugadorTorneoRepository participacionJugadorTorneoRepository;
 
-    public TorneoServiceIMP(TorneoRepository torneoRepository,
+    public TorneoServiceIMP(JornadaRepository jornadaRepository, PartidoRepository partidoRepository, TorneoRepository torneoRepository,
                             FaseRepository faseRepository,
                             SerieRepository serieRepository,
                             EquipoRepository equipoRepository,
                             JugadorRepository jugadorRepository,
                             ParticipacionEquipoTorneoRepository participacionEquipoTorneoRepository,
                             ParticipacionJugadorTorneoRepository participacionJugadorTorneoRepository) {
+        this.jornadaRepository = jornadaRepository;
+        this.partidoRepository = partidoRepository;
         this.torneoRepository = torneoRepository;
         this.faseRepository = faseRepository;
         this.serieRepository = serieRepository;
@@ -113,17 +119,19 @@ public class TorneoServiceIMP implements TorneoService {
         fase.setTorneo(torneoGuardado);
         Fase faseGuardada = faseRepository.save(fase);
 
-        // 3. Procesar las Series asociadas a la Fase
+        // 3. Procesar las Series, Participaciones y Generar el Fixture Completo
         if (dto.getSeries() != null && !dto.getSeries().isEmpty()) {
-            int contadorOrdenSerie = 1; // Contador para evitar la restricción NOT NULL en la columna 'orden'
+            int contadorOrdenSerie = 1;
 
             for (SerieCreacionDTO serieDto : dto.getSeries()) {
                 Serie serie = new Serie();
                 serie.setNombre(serieDto.getNombre());
-                serie.setFase(faseGuardada); // Enlazado a FASE según el DER
-                serie.setOrden(contadorOrdenSerie++); // Asignación explicita del orden numérico
+                serie.setFase(faseGuardada);
+                serie.setOrden(contadorOrdenSerie++);
 
                 Serie serieGuardada = serieRepository.save(serie);
+
+                List<ParticipacionEquipoTorneo> participacionesSerie = new ArrayList<>();
 
                 // 4. Registrar la Participación de cada Equipo en la Serie y Torneo
                 if (serieDto.getEquipos() != null && !serieDto.getEquipos().isEmpty()) {
@@ -135,21 +143,74 @@ public class TorneoServiceIMP implements TorneoService {
                         partEquipo.setTorneo(torneoGuardado);
                         partEquipo.setSerie(serieGuardada);
                         partEquipo.setEquipo(equipo);
-                        participacionEquipoTorneoRepository.save(partEquipo);
+                        partEquipo.setEstado("ACTIVO");
 
-                        // 5. Registrar la Plantilla de Jugadores inscritos (Protección para registros de SOLO equipos)
+                        ParticipacionEquipoTorneo partGuardada = participacionEquipoTorneoRepository.save(partEquipo);
+                        participacionesSerie.add(partGuardada);
+
+                        // Registrar Plantilla de Jugadores Inscritos
                         if (equipoDto.getJugadoresInscritos() != null && !equipoDto.getJugadoresInscritos().isEmpty()) {
                             for (JugadorInscritoDTO jugDto : equipoDto.getJugadoresInscritos()) {
-                                Jugador jugador = jugadorRepository.findById(jugDto.getIdJugador())
-                                        .orElseThrow(() -> new RecursoNoEncontradoException("Jugador no encontrado con ID: " + jugDto.getIdJugador()));
+                                if (jugDto.getIdJugador() != null) {
+                                    Jugador jugador = jugadorRepository.findById(jugDto.getIdJugador())
+                                            .orElseThrow(() -> new RecursoNoEncontradoException("Jugador no encontrado con ID: " + jugDto.getIdJugador()));
 
-                                ParticipacionJugadorTorneo partJugador = new ParticipacionJugadorTorneo();
-                                partJugador.setTorneo(torneoGuardado);
-                                partJugador.setEquipo(equipo);
-                                partJugador.setJugador(jugador);
-                                participacionJugadorTorneoRepository.save(partJugador);
+                                    ParticipacionJugadorTorneo partJugador = new ParticipacionJugadorTorneo();
+                                    partJugador.setTorneo(torneoGuardado);
+                                    partJugador.setEquipo(equipo);
+                                    partJugador.setJugador(jugador);
+                                    partJugador.setEstado("ACTIVO");
+                                    partJugador.setFechaRegistro(LocalDate.now());
+
+                                    participacionJugadorTorneoRepository.save(partJugador);
+                                }
                             }
                         }
+                    }
+                }
+
+                // 5. GENERACIÓN AUTOMÁTICA DE JORNADAS Y PARTIDOS (ALGORITMO ROUND-ROBIN)
+                if (participacionesSerie.size() >= 2) {
+                    List<ParticipacionEquipoTorneo> equiposRotacion = new ArrayList<>(participacionesSerie);
+
+                    // Si la cantidad de equipos es impar, agregamos un comodín de descanso
+                    boolean esImpar = equiposRotacion.size() % 2 != 0;
+                    if (esImpar) {
+                        equiposRotacion.add(null);
+                    }
+
+                    int totalEquipos = equiposRotacion.size();
+                    int totalJornadas = totalEquipos - 1;
+                    int partidosPorJornada = totalEquipos / 2;
+
+                    for (int j = 0; j < totalJornadas; j++) {
+                        // Guardar la Entidad Jornada
+                        Jornada jornada = new Jornada();
+                        jornada.setNombre("Jornada " + (j + 1));
+                        jornada.setNumero(j + 1);
+                        jornada.setSerie(serieGuardada);
+                        Jornada jornadaGuardada = jornadaRepository.save(jornada);
+
+                        for (int p = 0; p < partidosPorJornada; p++) {
+                            ParticipacionEquipoTorneo local = equiposRotacion.get(p);
+                            ParticipacionEquipoTorneo visitante = equiposRotacion.get(totalEquipos - 1 - p);
+
+                            // Crear partido solo si ninguno de los dos descansa
+                            if (local != null && visitante != null) {
+                                Partido partido = new Partido();
+                                partido.setJornada(jornadaGuardada);
+                                partido.setEquipoLocal(local);
+                                partido.setEquipoVisitante(visitante);
+                                partido.setEstado("PENDIENTE");
+                                partido.setFechaJuego(dto.getFechaInicio().plusDays(j * 7)); // Programación semanal inicial
+
+                                partidoRepository.save(partido);
+                            }
+                        }
+
+                        // Rotación Round-Robin de posiciones
+                        ParticipacionEquipoTorneo ultimo = equiposRotacion.remove(equiposRotacion.size() - 1);
+                        equiposRotacion.add(1, ultimo);
                     }
                 }
             }

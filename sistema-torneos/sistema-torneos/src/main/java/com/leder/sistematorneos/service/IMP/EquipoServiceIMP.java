@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EquipoServiceIMP implements EquipoService {
@@ -110,6 +111,66 @@ public class EquipoServiceIMP implements EquipoService {
         }
 
         return equipoGuardado;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Jugador> obtenerPlantillaBaseEquipo(Integer idEquipo) {
+        // Busca los registros en equipo_jugador para ese idEquipo
+        List<EquipoJugador> plantilla = equipoJugadorRepository.findByEquipo_IdEquipoAndEstado(idEquipo, "ACTIVO");
+
+        // Extrae y retorna la lista limpia de entidades Jugador
+        return plantilla.stream()
+                .map(EquipoJugador::getJugador)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EquipoJugador> obtenerPlantillaEquipo(Integer idEquipo) {
+        return equipoJugadorRepository.findByEquipo_IdEquipo(idEquipo);
+    }
+
+    /// NO TIENE NUMERO DE CAMISETA REVISAR ESE ERROR(PERO FUNCIONA)
+    @Transactional
+    @Override
+    public void agregarJugadorAPlantilla(Integer idEquipo, Integer idJugador) {
+        if (equipoJugadorRepository.existsByEquipo_IdEquipoAndJugador_IdJugador(idEquipo, idJugador)) {
+            throw new RuntimeException("El jugador ya pertenece a la plantilla de este equipo.");
+        }
+
+        Equipo equipo = equipoRepository.findById(idEquipo)
+                .orElseThrow(() -> new RuntimeException("Equipo no encontrado con ID: " + idEquipo));
+
+        Jugador jugador = jugadorRepository.findById(idJugador)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado con ID: " + idJugador));
+
+        EquipoJugador relacion = new EquipoJugador();
+        relacion.setEquipo(equipo);
+        relacion.setJugador(jugador);
+
+
+        equipoJugadorRepository.save(relacion);
+
+    }
+
+    @Transactional
+    @Override
+    public void removerJugadorDePlantilla(Integer idEquipo, Integer idJugador) {
+        equipoJugadorRepository.deleteByEquipoAndJugador(idEquipo, idJugador);
+    }
+
+    @Transactional
+    @Override
+    public boolean eliminarEquipoCascada(int id) {
+        // 1. Verificar si el equipo existe
+        if (!equipoRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Equipo no encontrado con id: " + id);
+        }
+        // 2. Eliminar la plantilla base del equipo primero (evita violar FK)
+        equipoJugadorRepository.deleteByEquipoId(id);
+        // 3. Eliminar la entidad equipo
+        equipoRepository.deleteById(id);
+        return true;
     }
 
 

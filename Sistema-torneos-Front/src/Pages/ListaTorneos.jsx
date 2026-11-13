@@ -19,8 +19,8 @@ function ListaTorneos() {
     }, []); // se ejecuta al primer render gracias al "[]"
 
     //---Filtramos los torneos por su estado teniendo 2 listas
-    const torneosActivos = torneos.filter((torneo) => torneo.estado === "En curso");
-    const otrosTorneo = torneos.filter((torneo) => torneo.estado !== "En curso");
+    const torneosActivos = torneos.filter((torneo) => torneo.estado === 'ACTIVO' || torneo.estado === "En curso");
+    const otrosTorneo = torneos.filter((torneo) => torneo.estado !== 'ACTIVO' && torneo.estado !== "En curso");
 
     return (
         <div className="contenedor-torneos">
