@@ -1,11 +1,12 @@
 import axios from 'axios';
+import {API_BASE} from "../Services/api";
 
-const API_URL = 'http://localhost:8080/api/torneos';
+const API_URL = `${API_BASE}/torneos`;
 
 // AGREGAR 'export' AQUÍ
 export const obtenerEquiposDisponibles = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/api/equipos');
+    const response = await axios.get(`${API_BASE}/equipos`);
     return response.data;
   } catch (error) {
     console.error("Error al obtener la lista de equipos:", error);
@@ -16,8 +17,8 @@ export const obtenerEquiposDisponibles = async () => {
 // 2. NUEVA FUNCIÓN: Obtiene la plantilla base atemporal (EQUIPO_JUGADOR) de un equipo específico
 export const obtenerPlantillaBaseEquipo = async (idEquipo) => {
   try {
-    const response = await axios.get(`http://localhost:8080/api/equipos/${idEquipo}/plantilla`);
-    return response.data || [];
+    const response = await axios.get(`${API_BASE}/equipos/${idEquipo}/plantilla-base`);
+    return response.data || []; 
   } catch (error) {
     console.error(`Error al obtener la plantilla base del equipo ${idEquipo}:`, error);
     return [];

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './TablaPosicionesJornada.css';
+import {API_BASE} from "../Services/api"
 
 const TablaPosicionesJornada = ({ idJornada }) => {
   const [ranking, setRanking] = useState([]);
@@ -15,7 +16,7 @@ const TablaPosicionesJornada = ({ idJornada }) => {
 
     setLoading(true);
     axios
-      .get(`http://localhost:8080/api/ranking/jornada/${idJornada}`)
+      .get(`${API_BASE}/ranking/jornada/${idJornada}`)
       .then((res) => {
         setRanking(res.data || []);
       })

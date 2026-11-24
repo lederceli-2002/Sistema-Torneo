@@ -66,8 +66,8 @@ export default function Equipos() {
     );
 
     return (
-        <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ padding: 'clamp(12px, 3vw, 30px)', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
                 <div>
                     <h2 style={{ margin: 0, color: '#0f172a' }}>Equipos</h2>
                     <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>Registro y mantenimiento de los equipos.</p>
@@ -85,7 +85,7 @@ export default function Equipos() {
                 placeholder="Buscar por nombre o ciudad..." 
                 value={filtro} 
                 onChange={(e) => setFiltro(e.target.value)} 
-                style={{ padding: '9px 12px', width: '320px', marginBottom: '20px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                style={{ padding: '9px 12px', width: '100%', maxWidth: '320px', boxSizing: 'border-box', marginBottom: '20px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
             />
 
             <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>

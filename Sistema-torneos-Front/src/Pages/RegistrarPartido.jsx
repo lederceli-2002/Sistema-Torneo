@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import {API_BASE} from "../Services/api"
 import './RegistrarPartido.css';
 
 const RegistrarPartido = () => {
@@ -39,7 +40,7 @@ const RegistrarPartido = () => {
   const obtenerDatosPartido = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:8080/api/partidos/${idPartido}`);
+      const res = await axios.get(`${API_BASE}/partidos/${idPartido}`);
       if (res.data) {
         setPartidoInfo(res.data);
 
@@ -66,13 +67,13 @@ const RegistrarPartido = () => {
 
         // Cargar plantilla de jugadores local
         if (idEquipoLocal) {
-          const resLocal = await axios.get(`http://localhost:8080/api/jugadores/equipo/${idEquipoLocal}`);
+          const resLocal = await axios.get(`${API_BASE}/jugadores/equipo/${idEquipoLocal}`);
           setJugadoresLocal(resLocal.data || []);
         }
 
         // Cargar plantilla de jugadores visitante
         if (idEquipoVisitante) {
-          const resVisitante = await axios.get(`http://localhost:8080/api/jugadores/equipo/${idEquipoVisitante}`);
+          const resVisitante = await axios.get(`${API_BASE}/jugadores/equipo/${idEquipoVisitante}`);
           setJugadoresVisitante(resVisitante.data || []);
         }
       }
@@ -193,7 +194,7 @@ const handleGuardarPartido = async () => {
     };
 
     // Petición POST al endpoint correcto configurado en PartidoController.java
-    await axios.post('http://localhost:8080/api/partidos/registrar', payload);
+    await axios.post(`${API_BASE}/partidos/registrar`, payload);
     
     alert("¡Resultado del partido registrado exitosamente!");
     navigate(-1);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './ModalTarjetasJornada.css';
+import { API_BASE } from '../Services/api';
 
 const ModalTarjetasJornada = ({ isOpen, onClose, idJornada, serieNombre, numeroJornada }) => {
   const [tarjetas, setTarjetas] = useState([]);
@@ -11,7 +12,7 @@ const ModalTarjetasJornada = ({ isOpen, onClose, idJornada, serieNombre, numeroJ
       const cargarTarjetas = async () => {
         setLoading(true);
         try {
-          const res = await axios.get(`http://localhost:8080/api/tarjetas/jornada/${idJornada}`);
+          const res = await axios.get(`${API_BASE}/tarjetas/jornada/${idJornada}`);
           setTarjetas(res.data || []);
         } catch (error) {
           console.error("Error al cargar tarjetas de la jornada:", error);

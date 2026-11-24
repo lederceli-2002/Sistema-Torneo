@@ -1,3 +1,4 @@
+import { API_BASE } from '../Services/api';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -49,7 +50,7 @@ export default function EditarEquipo() {
                 setPlantilla(Array.isArray(dataPlantilla) ? dataPlantilla : []);
 
                 // Cargar catálogo de todos los jugadores
-                const resJugadores = await axios.get('http://localhost:8080/api/jugadores');
+                const resJugadores = await axios.get(`${API_BASE}/jugadores`);
                 setJugadoresCatalogo(Array.isArray(resJugadores.data) ? resJugadores.data : []);
             } catch (error) {
                 console.error("Error al cargar los datos del equipo:", error);

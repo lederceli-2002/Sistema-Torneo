@@ -4,6 +4,7 @@ import axios from 'axios';
 import './FixtureTorneo.css';
 import TablaPosicionesJornada from '../Components/TablaPosicionesJornada';
 import ModalTarjetasJornada from '../Components/ModalTarjetasJornada';
+import { API_BASE } from '../Services/api';
 
 
 
@@ -38,7 +39,7 @@ const FixtureTorneo = () => {
     const cargarDatosTorneoYFixture = async () => {
       setLoading(true);
       try {
-        const resTorneo = await axios.get(`http://localhost:8080/api/torneos/${idTorneo}`);
+        const resTorneo = await axios.get(`${API_BASE}/torneos/${idTorneo}`);
         if (resTorneo.data) {
           const datos = {
             nombre: resTorneo.data.nombre || `Torneo #${idTorneo}`,
@@ -49,7 +50,7 @@ const FixtureTorneo = () => {
           setFormEditarTorneo(datos); // Inicializa los campos de la modal
         }
 
-        const resFixture = await axios.get(`http://localhost:8080/api/partidos/torneo/${idTorneo}`);
+        const resFixture = await axios.get(`${API_BASE}/partidos/torneo/${idTorneo}`);
 
         if (resFixture.data && Array.isArray(resFixture.data) && resFixture.data.length > 0) {
           
@@ -92,7 +93,7 @@ const handleGuardarConfiguracionTorneo = async (e) => {
   e.preventDefault();
   try {
     // 1. Consultar el estado actual del torneo para no perder sus relaciones/datos
-    const resTorneoActual = await axios.get(`http://localhost:8080/api/torneos/${idTorneo}`);
+    const resTorneoActual = await axios.get(`${API_BASE}/torneos/${idTorneo}`);
     const torneoData = resTorneoActual.data;
 
     // 2. Armar el objeto Torneo actualizando los campos editados en la modal
@@ -105,7 +106,7 @@ const handleGuardarConfiguracionTorneo = async (e) => {
     };
 
     // 3. Petición PUT al endpoint @PutMapping("/{id}") que ejecuta modificarTorneo
-    const res = await axios.put(`http://localhost:8080/api/torneos/${idTorneo}`, payloadTorneo);
+    const res = await axios.put(`${API_BASE}/torneos/${idTorneo}`, payloadTorneo);
 
     if (res.status === 200 || res.status === 201) {
       // Actualizar la interfaz local
